@@ -63,14 +63,8 @@ These advantages make net/http an appealing choice for both beginners and advanc
 
 ## Project: Tic-Tac-Toe
 
-The project is created once and used for all subsequent tasks.
-
 ### Task 0. Project Initialization
-
-In IntelliJ IDEA, create a new project:
-
-- Select the **Go** language.
-- Choose **Go SDK 1.22.1**.
+You need to create a project that will be used for all subsequent tasks.
 
 ### Task 1. Project Structure
 
