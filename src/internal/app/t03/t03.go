@@ -33,7 +33,13 @@ func (s *APIServer) Start() error {
 		return err
 	}
 	s.configureRouter()
+
+	if err := s.configureStore(); err != nil {
+		return err
+	}
+
 	s.logger.Info().Msg("starting api server")
+
 	return http.ListenAndServe(s.config.BindAddr, s.router)
 }
 
@@ -52,6 +58,18 @@ func (s *APIServer) configureLogger() error {
 
 func (s *APIServer) configureRouter() {
 	s.router.HandleFunc("/hello", s.handleHello())
+}
+
+func (s *APIServer) configureStore() error {
+	st := store.New(s.config.Store)
+
+	if err := st.Open(); err != nil {
+		return err
+	}
+
+	s.store = st
+
+	return nil
 }
 
 func (s *APIServer) handleHello() http.HandlerFunc {
