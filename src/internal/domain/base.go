@@ -2,15 +2,24 @@ package domain
 
 import "github.com/google/uuid"
 
+const (
+	e = iota
+	x
+	o
+)
+
 type vec struct {
-	x, y int8
+	y, x int8
 }
 
 type base struct {
-	field [3][3]int8
+	field     [3][3]int8
+	blocksCnt int8
 }
 
 type gameSession struct {
-	base base
-	uuid uuid.UUID
+	oldBase  base
+	base     base
+	compSide int8
+	uuid     uuid.UUID
 }

@@ -4,6 +4,6 @@ import "io"
 
 type Service interface {
 	GetNextApologiseMove() vec
-	FieldValidate() bool
+	GameChangeValidate() bool
 	IsGameEnd() bool
 }
