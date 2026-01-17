@@ -15,10 +15,12 @@ func whoseMove(base *base) bool {
 	return xes > oes
 }
 
-func minimax(base *base) {}
+func minimax(base *base) {
+}
 
 func (g *gameSession) GetNextApologiseMove() vec {
-	// It is always more effective to place a figure in the center of a field on the first move
+	// It is always more effective to place a figure in the center of a
+	// field on the first move
 	if g.base.field[1][1] == 0 {
 		return vec{1, 1}
 	}
@@ -48,7 +50,8 @@ func isFieldChanged(blocksCnt, oldBlocksCnt int8) bool {
 	return blocksCnt == oldBlocksCnt+1
 }
 
-// Returns whether the game state has changed outside of acceptable game behavior
+// Returns whether the game state has changed outside of acceptable game
+// behavior
 // true = all fine, acceptable behavior
 // false = bad behavior, cheating
 func (g *gameSession) GameChangeValidate() bool {
@@ -65,11 +68,8 @@ func (g *gameSession) GameChangeValidate() bool {
 				g.base.blocksCnt++
 			}
 
-			if !basesBlocksEq(g.base.field[i][j], g.oldBase.field[i][j]) && !isOpposideSideBlockMove(g.base.field[i][j], g.compSide) {
-				// if acceptMove == true {
-				// 	return false
-				// }
-				// acceptMove = true
+			if !basesBlocksEq(g.base.field[i][j], g.oldBase.field[i][j]) &&
+				!isOpposideSideBlockMove(g.base.field[i][j], g.compSide) {
 			}
 		}
 	}
