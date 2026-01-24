@@ -3,9 +3,9 @@ package domain
 import "github.com/google/uuid"
 
 const (
-	e = iota
-	x
-	o
+	e = iota // empty
+	x        // Xs
+	o        // Oes
 )
 
 type vec struct {
@@ -13,13 +13,13 @@ type vec struct {
 }
 
 type base struct {
-	field     [3][3]int8
+	field     [3][3]uint8
 	blocksCnt int8
 }
 
 type GameSession struct {
 	oldBase  base
-	base     base
+	Base     base `json:"gamefield"`
 	compSide int8
 	uuid     uuid.UUID
 }

@@ -1,7 +1,13 @@
 // package datasource
 package datasource
 
+import (
+	"domain"
+
+	"github.com/google/uuid"
+)
+
 type Repository interface {
-	SaveGame() error
-	GetGame() error
+	SaveGame(id uuid.UUID, gS domain.GameSession)
+	GetGame(id uuid.UUID)
 }
