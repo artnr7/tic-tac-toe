@@ -17,7 +17,7 @@ type base struct {
 	blocksCnt int8
 }
 
-type gameSession struct {
+type GameSession struct {
 	oldBase  base
 	base     base
 	compSide int8
