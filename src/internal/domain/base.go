@@ -8,6 +8,12 @@ const (
 	o        // Oes
 )
 
+const (
+	def  = iota // defeat
+	draw        // draw
+	vic         // victory
+)
+
 type vec struct {
 	y, x int8
 }
@@ -20,6 +26,6 @@ type base struct {
 type GameSession struct {
 	oldBase  base
 	Base     base `json:"gamefield"`
-	compSide int8
+	compSide uint8
 	uuid     uuid.UUID
 }

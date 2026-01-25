@@ -25,12 +25,12 @@ func inc(winRow *uint8, el, side uint8) {
 	}
 }
 
-func win(side uint8, base *base) bool {
+func win(base *base, side uint8) bool {
 	var hWinRow, vWinRow, d1WinRow, d2WinRow uint8
 
 	for i := range base.field {
 
-		hWinRow, vWinRow, d1WinRow, d2WinRow = 0, 0, 0, 0
+		hWinRow, vWinRow = 0, 0
 		for j := range base.field[i] {
 			inc(&hWinRow, base.field[i][j], side)
 			inc(&vWinRow, base.field[j][i], side)
@@ -38,7 +38,7 @@ func win(side uint8, base *base) bool {
 				inc(&d1WinRow, base.field[i][j], side)
 			}
 			if i == 2-j {
-				inc(&d1WinRow, base.field[i][j], side)
+				inc(&d2WinRow, base.field[i][j], side)
 			}
 		}
 
@@ -52,16 +52,55 @@ func win(side uint8, base *base) bool {
 	return false
 }
 
-func minimax(g *GameSession) {
-	var me, enemy, side uint8
+// Главный принцип Минимакса – это
+// нахождение варинта событий, в котором
+// возможно получить максимальную выгоду.
+// Градация успеха -> выигрыш -> ничья -> проигрыш
+// Т.к. значения дискретны и ограничены, то
+// алгоритм будет подразумевать только поиск
+// выигрыша, начиная с самого худшего
+// варианта – проигрыша, в частности порядок
+// поиска будет следующим
+// проигрыш -> ничья -> выигрыш
+// Если выигрыш найден, то дальнейший поиск не имеет смысла.
+// Если все варианты рассмотрены возвращается самый лучший вариант исхода
+//
+// Показатель ничьи -> заняты все клетки, и не
+// выполнено ни одно из условий выигрыша,
+// независимо от стороны
+//
+// Почему нет возможности возвращать только выигрыш?
+// Потому что если в ходе поиска была ничья и
+// мы её отбросили, а дальше будут
+// встречаться только поражения, то мы
+// упустим лучший вариант
+//
+// Допустим проигрыш у нас по умолчанию передан
+func minimax(b base, compSide, curSide uint8, w *uint8) {
 	var move vec
 
-	for {
-		move = vec{0, 0}
-		if win(side, &g.Base) {
-			return move
+	for i := range b.field {
+		for j := range b.field[i] {
+			// ->
+			if b.field[i][j] == e {
+				move = vec{int8(i), int8(j)}
+				curB := b
+				curB.field[i][j] = curSide
+
+				if win(&curB, curSide) {
+					if curSide == compSide {
+						*w = vic
+				}
+
+				minimax(curB, compSide, 3-curSide, w)
+				if *w == vic {
+					return
+				}
+			}
+			// ->
 		}
 	}
+	*w = draw
 }
 
 // TODO
@@ -87,7 +126,7 @@ func (g *GameSession) PutNextApologiseMove() {
 		g.Base.field[1][1] = g.compSide
 	}
 
-	minimax(&g.Base)
+	minimax(g, g.compSide)
 }
 
 func isFilledBlock(block int8) bool {
@@ -141,4 +180,8 @@ func (g *GameSession) GameChangeValidate() error {
 	}
 
 	return nil
+}
+
+func (g *GameSession) IsGameEnd() bool {
+	return true
 }
