@@ -73,10 +73,13 @@ func win(base *base, side uint8) bool {
 // Потому что если в ходе поиска была ничья и
 // мы её отбросили, а дальше будут
 // встречаться только поражения, то мы
-// упустим лучший вариант
+// упустим лучший вариант - ничью
 //
-// Допустим проигрыш у нас по умолчанию передан
-func minimax(b base, compSide, curSide uint8, w *uint8) {
+// # Допустим проигрыш у нас по умолчанию передан
+//
+// Описание алгоритма:
+// Вызываем
+func minimax(b base, compSide, curSide uint8, w *uint8, v *vec) {
 	var move vec
 
 	for i := range b.field {
@@ -87,20 +90,26 @@ func minimax(b base, compSide, curSide uint8, w *uint8) {
 				curB := b
 				curB.field[i][j] = curSide
 
-				if win(&curB, curSide) {
-					if curSide == compSide {
-						*w = vic
+				if win(&curB, curSide) && curSide == compSide && *w < vic {
+					*w = vic
 				}
-
-				minimax(curB, compSide, 3-curSide, w)
 				if *w == vic {
+					return
+				}
+				// Что значит 3-curSide? curSide может быть 1 или 2
+				minimax(curB, compSide, 3-curSide, w, v)
+				if *w == vic {
+					*v = move
 					return
 				}
 			}
 			// ->
 		}
 	}
-	*w = draw
+	if *w < draw {
+		*w = draw
+		*v = move
+	}
 }
 
 // TODO
