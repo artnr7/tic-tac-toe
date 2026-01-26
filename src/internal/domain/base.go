@@ -1,3 +1,4 @@
+// Package domain implements tiktok business logic
 package domain
 
 import "github.com/google/uuid"

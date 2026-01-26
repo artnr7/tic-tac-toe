@@ -112,7 +112,14 @@ func minimax(b base, compSide, curSide uint8, w *uint8, v *vec) {
 	}
 }
 
-// TODO
+func drawornot(g GameSession, w *uint8, v *vec) bool {
+	minimax(g.Base, g.compSide, g.compSide, w, v)
+	if *w == draw {
+		return true
+	}
+	return false
+}
+
 // PutNextApologiseMove put computer prefer next move with more productivity
 // with minimax strategy used
 func (g *GameSession) PutNextApologiseMove() {
@@ -129,29 +136,32 @@ func (g *GameSession) PutNextApologiseMove() {
 		}
 	}
 
-	// little optimization, always you should put your figure to the center of
+	// little optimization, always you should put your figure to the centre of
 	// the field, 'cause this is the most powerful strategy
 	if g.Base.field[1][1] == e && moveOrder == 0 {
 		g.Base.field[1][1] = g.compSide
 	}
 
-	minimax(g, g.compSide)
+	var v vec
+	var w uint8
+
+	minimax(g.Base, g.compSide, g.compSide, &w, &v)
 }
 
-func isFilledBlock(block int8) bool {
+func isFilledBlock(block uint8) bool {
 	return block == x || block == o
 }
 
-func isItRightBlock(block int8) bool {
+func isItRightBlock(block uint8) bool {
 	return block == e || isFilledBlock(block)
 }
 
-func basesBlocksEq(block1, block2 int8) bool {
+func basesBlocksEq(block1, block2 uint8) bool {
 	return block1 == block2
 }
 
 // Return is taken move opposite
-func isOpposideSideBlockMove(block, ownSide int8) bool {
+func isOpposideSideBlockMove(block, ownSide uint8) bool {
 	return block != ownSide
 }
 
@@ -159,13 +169,13 @@ func isFieldChanged(blocksCnt, oldBlocksCnt int8) bool {
 	return blocksCnt == oldBlocksCnt+1
 }
 
-// TODO: doesn't work
-// Returns whether the game state has changed outside of acceptable game
-// behavior
+// GameChangeValidate Returns whether the game state has changed outside of
+// acceptable game behavior
 // true = all fine, acceptable behavior
 // false = bad behavior, cheating
 func (g *GameSession) GameChangeValidate() error {
-	// acceptMove := false
+	acceptMove := false
+	g.Base.blocksCnt = 0
 
 	for i := range g.Base.field {
 		for j := range g.Base.field[i] {
@@ -178,8 +188,16 @@ func (g *GameSession) GameChangeValidate() error {
 				g.Base.blocksCnt++
 			}
 
+			// Если у нас один блок не совпадает в
+			// поле не совпадает, то это нормально,
+			// потому что возможно противник
+			// сделал ход
 			if !basesBlocksEq(g.Base.field[i][j], g.oldBase.field[i][j]) &&
 				!isOpposideSideBlockMove(g.Base.field[i][j], g.compSide) {
+				if acceptMove {
+					return errors.New("wrong file format")
+				}
+				acceptMove = true
 			}
 		}
 	}
@@ -192,5 +210,12 @@ func (g *GameSession) GameChangeValidate() error {
 }
 
 func (g *GameSession) IsGameEnd() bool {
-	return true
+	var v vec
+	var w uint8
+
+	if win(&g.Base, g.compSide) || win(&g.Base, 3-g.compSide) ||
+		drawornot(*g, &w, &v) {
+		return true
+	}
+	return false
 }
