@@ -3,5 +3,6 @@ go 1.25.5
 use (
 	./internal/datasource
 	./internal/domain
+	./internal/service/
 	./internal/web/
 )

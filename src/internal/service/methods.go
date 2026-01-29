@@ -1,14 +1,15 @@
-package domain
+package service
 
 import (
+	"domain"
 	"errors"
 )
 
-func whoseMove(base *base) bool {
+func whoseMove(base *domain.Base) bool {
 	var xes, oes int8
-	for i := range base.field {
+	for i := range base.Field {
 		for j := range i {
-			if j == x {
+			if j == domain.X {
 				xes++
 			} else {
 				oes++
@@ -25,20 +26,20 @@ func inc(winRow *uint8, el, side uint8) {
 	}
 }
 
-func win(base *base, side uint8) bool {
+func win(base *domain.Base, side uint8) bool {
 	var hWinRow, vWinRow, d1WinRow, d2WinRow uint8
 
-	for i := range base.field {
+	for i := range base.Field {
 
 		hWinRow, vWinRow = 0, 0
-		for j := range base.field[i] {
-			inc(&hWinRow, base.field[i][j], side)
-			inc(&vWinRow, base.field[j][i], side)
+		for j := range base.Field[i] {
+			inc(&hWinRow, base.Field[i][j], side)
+			inc(&vWinRow, base.Field[j][i], side)
 			if i == j {
-				inc(&d1WinRow, base.field[i][j], side)
+				inc(&d1WinRow, base.Field[i][j], side)
 			}
 			if i == 2-j {
-				inc(&d2WinRow, base.field[i][j], side)
+				inc(&d2WinRow, base.Field[i][j], side)
 			}
 		}
 
@@ -79,26 +80,27 @@ func win(base *base, side uint8) bool {
 //
 // Описание алгоритма:
 // Вызываем
-func minimax(b base, compSide, curSide uint8, w *uint8, v *vec) {
-	var move vec
+func minimax(b domain.Base, compSide, curSide uint8, w *uint8, v *domain.Vec) {
+	var move domain.Vec
 
-	for i := range b.field {
-		for j := range b.field[i] {
+	for i := range b.Field {
+		for j := range b.Field[i] {
 			// ->
-			if b.field[i][j] == e {
-				move = vec{int8(i), int8(j)}
+			if b.Field[i][j] == domain.E {
+				move = domain.Vec{int8(i), int8(j)}
 				curB := b
-				curB.field[i][j] = curSide
+				curB.Field[i][j] = curSide
 
-				if win(&curB, curSide) && curSide == compSide && *w < vic {
-					*w = vic
+				if win(&curB, curSide) && curSide == compSide &&
+					*w < domain.Vic {
+					*w = domain.Vic
 				}
-				if *w == vic {
+				if *w == domain.Vic {
 					return
 				}
 				// Что значит 3-curSide? curSide может быть 1 или 2
 				minimax(curB, compSide, 3-curSide, w, v)
-				if *w == vic {
+				if *w == domain.Vic {
 					*v = move
 					return
 				}
@@ -106,15 +108,15 @@ func minimax(b base, compSide, curSide uint8, w *uint8, v *vec) {
 			// ->
 		}
 	}
-	if *w < draw {
-		*w = draw
+	if *w < domain.Draw {
+		*w = domain.Draw
 		*v = move
 	}
 }
 
-func drawornot(g GameSession, w *uint8, v *vec) bool {
-	minimax(g.Base, g.compSide, g.compSide, w, v)
-	if *w == draw {
+func drawornot(g domain.GameSession, w *uint8, v *domain.Vec) bool {
+	minimax(g.Base, g.CompSide, g.CompSide, w, v)
+	if *w == domain.Draw {
 		return true
 	}
 	return false
@@ -122,14 +124,14 @@ func drawornot(g GameSession, w *uint8, v *vec) bool {
 
 // PutNextApologiseMove put computer prefer next move with more productivity
 // with minimax strategy used
-func (g *GameSession) PutNextApologiseMove() {
+func (g *Service) PutNextApologiseMove() domain.Vec {
 	// It is always more effective to place a figure in the center of a
 	// field on the first move
 	var moveOrder uint8
 
-	for i := range g.Base.field {
-		for j := range g.Base.field[i] {
-			if g.Base.field[i][j] == e {
+	for i := range g.gs.Base.Field {
+		for j := range g.gs.Base.Field[i] {
+			if g.gs.Base.Field[i][j] == domain.E {
 				continue
 			}
 			moveOrder++
@@ -138,22 +140,23 @@ func (g *GameSession) PutNextApologiseMove() {
 
 	// little optimization, always you should put your figure to the centre of
 	// the field, 'cause this is the most powerful strategy
-	if g.Base.field[1][1] == e && moveOrder == 0 {
-		g.Base.field[1][1] = g.compSide
+	if g.gs.Base.Field[1][1] == domain.E && moveOrder == 0 {
+		g.gs.Base.Field[1][1] = g.gs.CompSide
 	}
 
-	var v vec
+	var v domain.Vec
 	var w uint8
 
-	minimax(g.Base, g.compSide, g.compSide, &w, &v)
+	minimax(g.gs.Base, g.gs.CompSide, g.gs.CompSide, &w, &v)
+	return v
 }
 
 func isFilledBlock(block uint8) bool {
-	return block == x || block == o
+	return block == domain.X || block == domain.O
 }
 
 func isItRightBlock(block uint8) bool {
-	return block == e || isFilledBlock(block)
+	return block == domain.E || isFilledBlock(block)
 }
 
 func basesBlocksEq(block1, block2 uint8) bool {
@@ -173,27 +176,30 @@ func isFieldChanged(blocksCnt, oldBlocksCnt int8) bool {
 // acceptable game behavior
 // true = all fine, acceptable behavior
 // false = bad behavior, cheating
-func (g *GameSession) GameChangeValidate() error {
+func (g *Service) GameChangeValidate() error {
 	acceptMove := false
-	g.Base.blocksCnt = 0
+	g.gs.Base.BlocksCnt = 0
 
-	for i := range g.Base.field {
-		for j := range g.Base.field[i] {
+	for i := range g.gs.Base.Field {
+		for j := range g.gs.Base.Field[i] {
 
-			if !isItRightBlock(g.Base.field[i][j]) {
+			if !isItRightBlock(g.gs.Base.Field[i][j]) {
 				return errors.New("wrong file format")
 			}
 
-			if isFilledBlock(g.Base.field[i][j]) {
-				g.Base.blocksCnt++
+			if isFilledBlock(g.gs.Base.Field[i][j]) {
+				g.gs.Base.BlocksCnt++
 			}
 
 			// Если у нас один блок не совпадает в
 			// поле не совпадает, то это нормально,
 			// потому что возможно противник
 			// сделал ход
-			if !basesBlocksEq(g.Base.field[i][j], g.oldBase.field[i][j]) &&
-				!isOpposideSideBlockMove(g.Base.field[i][j], g.compSide) {
+			if !basesBlocksEq(
+				g.gs.Base.Field[i][j],
+				g.gs.OldBase.Field[i][j],
+			) &&
+				!isOpposideSideBlockMove(g.gs.Base.Field[i][j], g.gs.CompSide) {
 				if acceptMove {
 					return errors.New("wrong file format")
 				}
@@ -202,19 +208,19 @@ func (g *GameSession) GameChangeValidate() error {
 		}
 	}
 
-	if !isFieldChanged(g.Base.blocksCnt, g.oldBase.blocksCnt) {
+	if !isFieldChanged(g.gs.Base.BlocksCnt, g.gs.OldBase.BlocksCnt) {
 		return errors.New("field not changed")
 	}
 
 	return nil
 }
 
-func (g *GameSession) IsGameEnd() bool {
-	var v vec
+func (g *Service) IsGameEnd() bool {
+	var v domain.Vec
 	var w uint8
 
-	if win(&g.Base, g.compSide) || win(&g.Base, 3-g.compSide) ||
-		drawornot(*g, &w, &v) {
+	if win(&g.gs.Base, g.gs.CompSide) || win(&g.gs.Base, 3-g.gs.CompSide) ||
+		drawornot(g.gs, &w, &v) {
 		return true
 	}
 	return false

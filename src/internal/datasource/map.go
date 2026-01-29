@@ -4,6 +4,6 @@ import (
 	"sync"
 )
 
-type Storage[K comparable, V any] struct {
+type Map[K comparable, V any] struct {
 	m sync.Map
 }

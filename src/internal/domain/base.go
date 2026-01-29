@@ -1,32 +1,32 @@
-// Package domain implements tiktok business logic
+// Package domain describes business logic entities
 package domain
 
 import "github.com/google/uuid"
 
 const (
-	e = iota // empty
-	x        // Xs
-	o        // Oes
+	E = iota // empty
+	X        // Xs
+	O        // Oes
 )
 
 const (
-	def  = iota // defeat
-	draw        // draw
-	vic         // victory
+	Def  = iota // defeat
+	Draw        // draw
+	Vic         // victory
 )
 
-type vec struct {
-	y, x int8
+type Vec struct {
+	Y, X int8
 }
 
-type base struct {
-	field     [3][3]uint8
-	blocksCnt int8
+type Base struct {
+	Field     [3][3]uint8
+	BlocksCnt int8
 }
 
 type GameSession struct {
-	oldBase  base
-	Base     base `json:"gamefield"`
-	compSide uint8
-	uuid     uuid.UUID
+	OldBase  Base
+	Base     Base `json:"gamefield"`
+	CompSide uint8
+	UUID     uuid.UUID
 }
