@@ -1,7 +1,6 @@
 package web
 
 import (
-	"domain"
 	"encoding/json"
 	"net/http"
 	"service"
@@ -18,31 +17,41 @@ func NewGameHandler(s service.Service) *GameHandler {
 }
 
 func (h *GameHandler) UpdateGame(w http.ResponseWriter, r *http.Request) {
-	uuid, err := uuid.Parse(r.PathValue("UUID"))
+	uuid, err := uuid.Parse(r.PathValue("uuid"))
 	if err != nil {
 		http.Error(w, "Invalid UUID format", http.StatusBadRequest)
 	}
 
-	var g domain.GameSession
-	if json.NewDecoder(r.Body).Decode(g) != nil {
+	// dto
+	var dto dto
+	dto.uuid = uuid
+	if json.NewDecoder(r.Body).Decode(dto) != nil {
 		http.Error(w, "Invalid JSON file", http.StatusBadRequest)
 		return
 	}
 
+	// transformation
+	gs := toDomain(&dto)
+	h.s.SetGameSession(gs)
+
 	// business logic
 	// check before
-	err = g.GameChangeValidate()
+	err = h.s.GameChangeValidate()
 	if err != nil {
 		http.Error(w, "Game not changed", http.StatusBadRequest)
 	}
 
-	// saving validated game
-	h.r.SaveGame(uuid, g)
+	end := h.s.IsGameEnd()
+	if end {
+	} else {
+		// prepare next move
+		h.s.PutNextApologiseMove()
+	}
 
-	// prepare next move
-
-	g.PutNextApologiseMove()
+	// transformation
+	gs1 := h.s.GetGameSession(dto.uuid)
+	dto1 := toDTO(&gs1)
 
 	w.Header().Set("Content-Type", "application/json")
-	// json.NewEncoder(w).Encode()
+	json.NewEncoder(w).Encode(dto1)
 }

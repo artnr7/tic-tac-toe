@@ -15,14 +15,15 @@ func CreateApp() fx.Option {
 			datasource.NewStorage,
 			service_impl.NewServiceImpl,
 			web.NewGameHandler,
-			http.NewServeMux,
 		),
 		fx.Provide(RegisterRoutes),
 	)
 }
 
-func RegisterRoutes(h *web.GameHandler, mtx http.ServeMux) {
+func RegisterRoutes(h *web.GameHandler) {
+	mtx := http.NewServeMux()
 	mtx.HandleFunc("POST /game/{uuid}", h.UpdateGame)
+	http.ListenAndServe(":8080", mtx)
 }
 
 func main() {

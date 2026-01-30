@@ -16,6 +16,6 @@ func NewServiceImpl(
 ) *ServiceImpl {
 	return &ServiceImpl{
 		repo: repo,
-		gs:   *domain.NewGameSession(),
+		GS:   *domain.NewGameSession(),
 	}
 }
