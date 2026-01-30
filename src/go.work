@@ -4,5 +4,6 @@ use (
 	./internal/datasource
 	./internal/domain
 	./internal/service/
+	./internal/service_impl/
 	./internal/web/
 )

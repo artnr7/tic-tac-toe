@@ -1,6 +1,8 @@
 package service
 
 import (
+	"domain"
+
 	"github.com/google/uuid"
 )
 

@@ -4,19 +4,19 @@ import (
 	"domain"
 	"encoding/json"
 	"net/http"
+	"service"
 
 	"github.com/google/uuid"
 )
 
 type GameHandler struct {
-	r datasource.Repository
+	s service.Service
 }
 
 func (h *GameHandler) UpdateGame(w http.ResponseWriter, r *http.Request) {
 	uuid, err := uuid.Parse(r.PathValue("UUID"))
 	if err != nil {
 		http.Error(w, "Invalid UUID format", http.StatusBadRequest)
-	}
 	var g domain.GameSession
 	if json.NewDecoder(r.Body).Decode(g) != nil {
 		http.Error(w, "Invalid JSON file", http.StatusBadRequest)

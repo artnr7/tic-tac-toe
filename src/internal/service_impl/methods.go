@@ -1,4 +1,4 @@
-package service
+package service_impl
 
 import (
 	"domain"
@@ -124,7 +124,7 @@ func drawornot(g domain.GameSession, w *uint8, v *domain.Vec) bool {
 
 // PutNextApologiseMove put computer prefer next move with more productivity
 // with minimax strategy used
-func (g *Service) PutNextApologiseMove() domain.Vec {
+func (g *ServiceImpl) PutNextApologiseMove() domain.Vec {
 	// It is always more effective to place a figure in the center of a
 	// field on the first move
 	var moveOrder uint8
@@ -176,7 +176,7 @@ func isFieldChanged(blocksCnt, oldBlocksCnt int8) bool {
 // acceptable game behavior
 // true = all fine, acceptable behavior
 // false = bad behavior, cheating
-func (g *Service) GameChangeValidate() error {
+func (g *ServiceImpl) GameChangeValidate() error {
 	acceptMove := false
 	g.gs.Base.BlocksCnt = 0
 
@@ -215,7 +215,7 @@ func (g *Service) GameChangeValidate() error {
 	return nil
 }
 
-func (g *Service) IsGameEnd() bool {
+func (g *ServiceImpl) IsGameEnd() bool {
 	var v domain.Vec
 	var w uint8
 
