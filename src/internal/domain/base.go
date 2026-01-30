@@ -1,7 +1,11 @@
 // Package domain describes business logic entities
 package domain
 
-import "github.com/google/uuid"
+import (
+	"math/rand"
+
+	"github.com/google/uuid"
+)
 
 const (
 	E = iota // empty
@@ -29,4 +33,8 @@ type GameSession struct {
 	Base     Base `json:"gamefield"`
 	CompSide uint8
 	UUID     uuid.UUID
+}
+
+func NewGameSession() *GameSession {
+	return &GameSession{CompSide: uint8(rand.Int31n(2) + 1)}
 }

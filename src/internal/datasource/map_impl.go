@@ -8,18 +8,18 @@ import (
 )
 
 func NewStorage() *Map {
-	return &Map{m: make(map[uuid.UUID]Model), mu: }
+	return &Map{m: make(map[uuid.UUID]Model)}
 }
 
-func (s *Map[K, V]) SaveGame(gs domain.GameSession) {
-	m := toModel(&gs)
-	s.m.Store(m.uuid, m)
+func (m *Map) SaveGame(gs domain.GameSession) {
+	mod := toModel(&gs)
+	m.Store(&mod.uuid, mod)
 }
 
-func (s *Map[K, V]) GetGame(uuid uuid.UUID) (*domain.GameSession, error) {
-	v, ok := s.m.Load(uuid)
+func (m *Map) GetGame(uuid uuid.UUID) (*domain.GameSession, error) {
+	v, ok := m.Load(&uuid)
 	if !ok {
-		return &domain.GameSession{}, errors.New("Game not found")
+		return &domain.GameSession{}, errors.New("game not found")
 	}
 
 	return toDomain(&v), nil

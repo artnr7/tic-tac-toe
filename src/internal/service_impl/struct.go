@@ -9,3 +9,13 @@ type ServiceImpl struct {
 	repo service.Repository
 	gs   domain.GameSession
 }
+
+func NewServiceImpl(
+	repo service.Repository,
+	gs domain.GameSession,
+) *ServiceImpl {
+	return &ServiceImpl{
+		repo: repo,
+		gs:   *domain.NewGameSession(),
+	}
+}

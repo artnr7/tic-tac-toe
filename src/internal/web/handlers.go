@@ -13,10 +13,16 @@ type GameHandler struct {
 	s service.Service
 }
 
+func NewGameHandler(s service.Service) *GameHandler {
+	return &GameHandler{s: s}
+}
+
 func (h *GameHandler) UpdateGame(w http.ResponseWriter, r *http.Request) {
 	uuid, err := uuid.Parse(r.PathValue("UUID"))
 	if err != nil {
 		http.Error(w, "Invalid UUID format", http.StatusBadRequest)
+	}
+
 	var g domain.GameSession
 	if json.NewDecoder(r.Body).Decode(g) != nil {
 		http.Error(w, "Invalid JSON file", http.StatusBadRequest)
@@ -36,8 +42,6 @@ func (h *GameHandler) UpdateGame(w http.ResponseWriter, r *http.Request) {
 	// prepare next move
 
 	g.PutNextApologiseMove()
-
-
 
 	w.Header().Set("Content-Type", "application/json")
 	// json.NewEncoder(w).Encode()

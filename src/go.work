@@ -1,6 +1,7 @@
 go 1.25.5
 
 use (
+	./cmd/tiktok/
 	./internal/datasource
 	./internal/domain
 	./internal/service/
