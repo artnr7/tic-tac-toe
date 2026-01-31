@@ -14,9 +14,10 @@ const (
 )
 
 const (
-	Def  = iota // defeat
-	Draw        // draw
-	Vic         // victory
+	Def    = iota // defeat
+	Draw          // draw
+	Vic           // victory
+	Motive        // game process
 )
 
 type Vec struct {
@@ -28,13 +29,19 @@ type Base struct {
 	BlocksCnt int8
 }
 
+type Status uint8
+
 type GameSession struct {
-	OldBase  Base
-	Base     Base `json:"gamefield"`
-	CompSide uint8
-	UUID     uuid.UUID
+	UUID       uuid.UUID
+	OldBase    Base
+	Base       Base `json:"gamefield"`
+	CompSide   uint8
+	CompStatus Status
 }
 
 func NewGameSession() *GameSession {
-	return &GameSession{CompSide: uint8(rand.Int31n(2) + 1)}
+	return &GameSession{
+		CompSide:   uint8(rand.Int31n(2) + 1),
+		CompStatus: Motive,
+	}
 }

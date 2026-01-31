@@ -1,6 +1,7 @@
 package web
 
 import (
+	"domain"
 	"encoding/json"
 	"net/http"
 	"service"
@@ -23,35 +24,45 @@ func (h *GameHandler) UpdateGame(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// dto
-	var dto dto
-	dto.uuid = uuid
+	var dto *dto
+	dto.UUID = uuid
 	if json.NewDecoder(r.Body).Decode(dto) != nil {
 		http.Error(w, "Invalid JSON file", http.StatusBadRequest)
 		return
 	}
 
+	// check this game is existed
+	// if it existed then we send it to user
+	if _, err := h.s.GetGameSession(&uuid); err != nil {
+		gs := h.s.CreateGameSession(&uuid)
+		dto := toDTO(gs)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(dto)
+		return
+	}
+
 	// transformation
-	gs := toDomain(&dto)
+	gs := toDomain(dto)
 	h.s.SetGameSession(gs)
+	// ok, we have refreshed gs in the repo
 
 	// business logic
 	// check before
-	err = h.s.GameChangeValidate()
+	err = h.s.GameChangeValidate(&(dto.UUID))
 	if err != nil {
 		http.Error(w, "Game not changed", http.StatusBadRequest)
 	}
 
-	end := h.s.IsGameEnd()
-	if end {
-	} else {
+	// if isn't game end
+	if h.s.IsGameEnd(&(dto.UUID)) == domain.Motive {
 		// prepare next move
-		h.s.PutNextApologiseMove()
+		h.s.PutNextApologiseMove(&(dto.UUID))
 	}
 
 	// transformation
-	gs1 := h.s.GetGameSession(dto.uuid)
-	dto1 := toDTO(&gs1)
+	gs, _ = h.s.GetGameSession(&(dto.UUID))
+	dto = toDTO(gs)
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(dto1)
+	json.NewEncoder(w).Encode(dto)
 }

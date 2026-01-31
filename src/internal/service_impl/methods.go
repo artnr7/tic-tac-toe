@@ -3,22 +3,24 @@ package service_impl
 import (
 	"domain"
 	"errors"
+
+	"github.com/google/uuid"
 )
 
-func whoseMove(base *domain.Base) bool {
-	var xes, oes int8
-	for i := range base.Field {
-		for j := range i {
-			if j == domain.X {
-				xes++
-			} else {
-				oes++
-			}
-		}
-	}
-
-	return xes > oes
-}
+// func whoseMove(base *domain.Base) bool {
+// 	var xes, oes int8
+// 	for i := range base.Field {
+// 		for j := range i {
+// 			if j == domain.X {
+// 				xes++
+// 			} else {
+// 				oes++
+// 			}
+// 		}
+// 	}
+//
+// 	return xes > oes
+// }
 
 func inc(winRow *uint8, el, side uint8) {
 	if el == side {
@@ -114,24 +116,30 @@ func minimax(b domain.Base, compSide, curSide uint8, w *uint8, v *domain.Vec) {
 	}
 }
 
-func drawornot(g domain.GameSession, w *uint8, v *domain.Vec) bool {
+func drawornot(g domain.GameSession) bool {
+	var v *domain.Vec
+	var w *uint8
 	minimax(g.Base, g.CompSide, g.CompSide, w, v)
+
 	if *w == domain.Draw {
 		return true
 	}
+
 	return false
 }
 
 // PutNextApologiseMove put computer prefer next move with more productivity
 // with minimax strategy used
-func (g *ServiceImpl) PutNextApologiseMove() domain.Vec {
+func (g *ServiceImpl) PutNextApologiseMove(uuid *uuid.UUID) domain.Vec {
+	gs, _ := g.repo.GetModel(uuid)
+
 	// It is always more effective to place a figure in the center of a
 	// field on the first move
 	var moveOrder uint8
 
-	for i := range g.gs.Base.Field {
-		for j := range g.gs.Base.Field[i] {
-			if g.gs.Base.Field[i][j] == domain.E {
+	for i := range gs.Base.Field {
+		for j := range gs.Base.Field[i] {
+			if gs.Base.Field[i][j] == domain.E {
 				continue
 			}
 			moveOrder++
@@ -140,14 +148,14 @@ func (g *ServiceImpl) PutNextApologiseMove() domain.Vec {
 
 	// little optimization, always you should put your figure to the centre of
 	// the field, 'cause this is the most powerful strategy
-	if g.gs.Base.Field[1][1] == domain.E && moveOrder == 0 {
-		g.gs.Base.Field[1][1] = g.gs.CompSide
+	if gs.Base.Field[1][1] == domain.E && moveOrder == 0 {
+		gs.Base.Field[1][1] = gs.CompSide
 	}
 
 	var v domain.Vec
 	var w uint8
 
-	minimax(g.gs.Base, g.gs.CompSide, g.gs.CompSide, &w, &v)
+	minimax(gs.Base, gs.CompSide, gs.CompSide, &w, &v)
 	return v
 }
 
@@ -176,19 +184,20 @@ func isFieldChanged(blocksCnt, oldBlocksCnt int8) bool {
 // acceptable game behavior
 // true = all fine, acceptable behavior
 // false = bad behavior, cheating
-func (g *ServiceImpl) GameChangeValidate() error {
+func (g *ServiceImpl) GameChangeValidate(uuid *uuid.UUID) error {
+	gs, _ := g.repo.GetModel(uuid)
 	acceptMove := false
-	g.gs.Base.BlocksCnt = 0
+	gs.Base.BlocksCnt = 0
 
-	for i := range g.gs.Base.Field {
-		for j := range g.gs.Base.Field[i] {
+	for i := range gs.Base.Field {
+		for j := range gs.Base.Field[i] {
 
-			if !isItRightBlock(g.gs.Base.Field[i][j]) {
+			if !isItRightBlock(gs.Base.Field[i][j]) {
 				return errors.New("wrong file format")
 			}
 
-			if isFilledBlock(g.gs.Base.Field[i][j]) {
-				g.gs.Base.BlocksCnt++
+			if isFilledBlock(gs.Base.Field[i][j]) {
+				gs.Base.BlocksCnt++
 			}
 
 			// Если у нас один блок не совпадает в
@@ -196,10 +205,10 @@ func (g *ServiceImpl) GameChangeValidate() error {
 			// потому что возможно противник
 			// сделал ход
 			if !basesBlocksEq(
-				g.gs.Base.Field[i][j],
-				g.gs.OldBase.Field[i][j],
+				gs.Base.Field[i][j],
+				gs.OldBase.Field[i][j],
 			) &&
-				!isOpposideSideBlockMove(g.gs.Base.Field[i][j], g.gs.CompSide) {
+				!isOpposideSideBlockMove(gs.Base.Field[i][j], gs.CompSide) {
 				if acceptMove {
 					return errors.New("wrong file format")
 				}
@@ -208,20 +217,23 @@ func (g *ServiceImpl) GameChangeValidate() error {
 		}
 	}
 
-	if !isFieldChanged(g.gs.Base.BlocksCnt, g.gs.OldBase.BlocksCnt) {
+	if !isFieldChanged(gs.Base.BlocksCnt, gs.OldBase.BlocksCnt) {
 		return errors.New("field not changed")
 	}
 
 	return nil
 }
 
-func (g *ServiceImpl) IsGameEnd() bool {
-	var v domain.Vec
-	var w uint8
-
-	if win(&g.gs.Base, g.gs.CompSide) || win(&g.gs.Base, 3-g.gs.CompSide) ||
-		drawornot(g.gs, &w, &v) {
-		return true
+func (g *ServiceImpl) IsGameEnd(uuid *uuid.UUID) domain.Status {
+	gs, _ := g.repo.GetModel(uuid)
+	if win(&gs.Base, gs.CompSide) {
+		gs.CompStatus = domain.Vic
+	} else if win(&gs.Base, 3-gs.CompSide) {
+		gs.CompStatus = domain.Def
+	} else if drawornot(*gs) {
+		gs.CompStatus = domain.Draw
+	} else {
+		gs.CompStatus = domain.Motive
 	}
-	return false
+	return gs.CompStatus
 }

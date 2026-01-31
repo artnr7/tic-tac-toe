@@ -8,10 +8,12 @@ import (
 )
 
 type Service interface {
-	PutNextApologiseMove() domain.Vec
-	GameChangeValidate() error
-	IsGameEnd() bool
+	PutNextApologiseMove(*uuid.UUID) domain.Vec
+	GameChangeValidate(*uuid.UUID) error
+	IsGameEnd(*uuid.UUID) domain.Status
 
+	// getter/setter/etc.
+	CreateGameSession(*uuid.UUID) *domain.GameSession
 	SetGameSession(*domain.GameSession)
-	GetGameSession(uuid.UUID) domain.GameSession
+	GetGameSession(*uuid.UUID) (*domain.GameSession, error)
 }

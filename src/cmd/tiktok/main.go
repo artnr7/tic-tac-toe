@@ -12,7 +12,7 @@ import (
 func CreateApp() fx.Option {
 	return fx.Options(
 		fx.Invoke(
-			datasource.NewStorage,
+			datasource.NewMap,
 			service_impl.NewServiceImpl,
 			web.NewGameHandler,
 		),

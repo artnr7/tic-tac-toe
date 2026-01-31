@@ -3,12 +3,16 @@ package web
 import "domain"
 
 func toDTO(gs *domain.GameSession) *dto {
-	return &dto{field: gs.Base.Field, uuid: gs.UUID}
+	return &dto{
+		Field:  gs.Base.Field,
+		UUID:   gs.UUID,
+		Status: Status(gs.CompStatus),
+	}
 }
 
 func toDomain(d *dto) *domain.GameSession {
 	return &domain.GameSession{
-		Base: domain.Base{d.field, 0},
-		UUID: d.uuid,
+		Base: domain.Base{d.Field, 0},
+		UUID: d.UUID,
 	}
 }
