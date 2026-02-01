@@ -1,0 +1,110 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Крестики-нолики онлайн</title>
+    <style>
+      .board {
+        display: grid;
+        grid-template-columns: repeat(3, 100px);
+        gap: 5px;
+        margin: 50px auto;
+      }
+      .cell {
+        width: 100px;
+        height: 100px;
+        border: 2px solid #333;
+        font-size: 40px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: white;
+      }
+      .cell:hover:not(.filled) {
+        background: #f0f0f0;
+      }
+      .cell.filled {
+        cursor: default;
+      }
+      .status {
+        text-align: center;
+        font-size: 24px;
+        margin: 20px;
+      }
+      button {
+        display: block;
+        margin: 20px auto;
+        padding: 10px 20px;
+        font-size: 18px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="status" id="status">Ваша очередь (X)</div>
+    <div class="board" id="board"></div>
+    <button onclick="newGame()">Новая игра</button>
+
+    <script>
+      const API_URL = "http://localhost:8080"; // Ваш бэкенд
+      let board = Array(9).fill("");
+      let currentPlayer = "X";
+      const boardEl = document.getElementById("board");
+      const statusEl = document.getElementById("status");
+
+      // Инициализация поля
+      function initBoard() {
+        boardEl.innerHTML = "";
+        for (let i = 0; i < 9; i++) {
+          const cell = document.createElement("div");
+          cell.className = "cell";
+          cell.dataset.index = i;
+          cell.addEventListener("click", () => makeMove(i));
+          boardEl.appendChild(cell);
+        }
+        updateBoard();
+      }
+
+      // Ход игрока
+      async function makeMove(index) {
+        if (board[index] !== "" || currentPlayer !== "X") return;
+
+        const response = await fetch(`${API_URL}/make-move`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ position: index, player: currentPlayer }),
+        });
+
+        const data = await response.json();
+        board = data.board; // Массив ['X','O','','',...]
+        currentPlayer = data.currentPlayer;
+        updateStatus(data.status); // "X выиграл", "Ничья", "Очередь O"
+        updateBoard();
+
+        if (data.winner) alert(data.status);
+      }
+
+      // Обновление отображения
+      function updateBoard() {
+        Array.from(boardEl.children).forEach((cell, i) => {
+          cell.textContent = board[i];
+          if (board[i]) cell.classList.add("filled");
+        });
+      }
+
+      function updateStatus(status) {
+        statusEl.textContent = status;
+      }
+
+      // Новая игра
+      async function newGame() {
+        await fetch(`${API_URL}/new-game`, { method: "POST" });
+        board = Array(9).fill("");
+        currentPlayer = "X";
+        updateStatus("Ваша очередь (X)");
+        initBoard();
+      }
+
+      initBoard();
+    </script>
+  </body>
+</html>
