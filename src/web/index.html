@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2vmin;
+        background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+      }
+      .board{
+        display: grid;
+        grid-template-columns: repeat(3, 100px);
+      }
+      .cell {
+        width: 100px;
+        height: 100px;
+        border: 2px solid #333;
+        font-size: 40px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: white;
+      }
+      <!-- .cell:hover:not(.filled) { -->
+      <!--   background: #f0f0f0; -->
+      <!-- } -->
+      <!-- .cell.filled { -->
+      <!--   cursor: default; -->
+      <!-- } -->
+    </style>
+  </head>
+  <body>
+    <div class="board" id="board"></div>
+    <!-- <div id="status"></div> -->
+    <!-- <button onclick="newGame()">New Game</button> -->
+
+    <script src="./script.js">
+      // const API = "http://localhost:8080";
+      // // let board = Array(3).fill().map(Array(3).fill(""))
+      // let board = Array(9).fill("");
+      // const field = document.getElementById("field");
+      //
+      // function createBoard() {
+      //   console.log("1");
+      //   field.innerHTML = "";
+      //   for (let i = 0; i < 9; i++) {
+      //     const cell = document.createElement("div");
+      //     cell.className = "cell";
+      //     cell.dataset.index = i;
+      //     // cell.addEventlistener("click", ());
+      //     field.appendChild(cell);
+      //   }
+      //   updateBoard();
+      // }
+      //
+      // // Обновление отображения
+      // function updateBoard() {
+      //   Array.from(field.children).forEach((cell, i) => {
+      //     cell.textContent = board[i];
+      //     if (board[i]) cell.classList.add("filled");
+      //   });
+      // }
+      // async function newGame() {
+      //   // await fetch(`${API_URL}/new-game`, { method: "POST" });
+      //   board = Array(9).fill("");
+      //   currentPlayer = "X";
+      //   // updateStatus("Ваша очередь (X)");
+      //   createBoard();
+      // }
+      // createBoard();
+    </script>
+  </body>
+</html>

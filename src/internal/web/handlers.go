@@ -1,8 +1,8 @@
 package web
 
 import (
-	"domain"
 	"encoding/json"
+	"html/template"
 	"net/http"
 	"service"
 
@@ -15,6 +15,12 @@ type GameHandler struct {
 
 func NewGameHandler(s service.Service) *GameHandler {
 	return &GameHandler{s: s}
+}
+
+func (h *GameHandler) Root(w http.ResponseWriter, r *http.Request) {
+	tmpl := template.Must(template.ParseFiles("web/index.html"))
+
+	tmpl.Execute(w, nil)
 }
 
 func (h *GameHandler) UpdateGame(w http.ResponseWriter, r *http.Request) {
@@ -54,10 +60,10 @@ func (h *GameHandler) UpdateGame(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// if isn't game end
-	if h.s.IsGameEnd(&(dto.UUID)) == domain.Motive {
-		// prepare next move
-		h.s.PutNextApologiseMove(&(dto.UUID))
-	}
+	// if h.s.IsGameEnd(&(dto.UUID)) == domain.Motive {
+	// 	// prepare next move
+	// 	h.s.PutNextApologiseMove(&(dto.UUID))
+	// }
 
 	// transformation
 	gs, _ = h.s.GetGameSession(&(dto.UUID))
