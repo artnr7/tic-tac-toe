@@ -130,13 +130,9 @@ func drawornot(g domain.GameSession) bool {
 
 // PutNextApologiseMove put computer prefer next move with more productivity
 // with minimax strategy used
-func (g *ServiceImpl) PutNextApologiseMove(uuid *uuid.UUID) domain.Vec {
-	gs, _ := g.repo.GetModel(uuid)
-
-	// It is always more effective to place a figure in the center of a
-	// field on the first move
+func (g *ServiceImpl) PutNextApologiseMove(gs *domain.GameSession) {
+	/* little optimization, always you should put your figure to the centre of the field, 'cause this is the most powerful strategy */
 	var moveOrder uint8
-
 	for i := range gs.Base.Field {
 		for j := range gs.Base.Field[i] {
 			if gs.Base.Field[i][j] == domain.E {
@@ -145,18 +141,16 @@ func (g *ServiceImpl) PutNextApologiseMove(uuid *uuid.UUID) domain.Vec {
 			moveOrder++
 		}
 	}
-
-	// little optimization, always you should put your figure to the centre of
-	// the field, 'cause this is the most powerful strategy
 	if gs.Base.Field[1][1] == domain.E && moveOrder == 0 {
 		gs.Base.Field[1][1] = gs.CompSide
 	}
 
+	// minimax
 	var v domain.Vec
 	var w uint8
 
 	minimax(gs.Base, gs.CompSide, gs.CompSide, &w, &v)
-	return v
+	// fmt.Println(v)
 }
 
 func isFilledBlock(block uint8) bool {

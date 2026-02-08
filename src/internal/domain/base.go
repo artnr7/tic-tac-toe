@@ -46,9 +46,11 @@ func NewGameSession() (*GameSession, error) {
 		return &GameSession{}, errors.New("can't create uuid")
 	}
 	gs := GameSession{
+		UUID:       uuid,
+		OldBase:    Base{[3][3]uint8{}, 0},
+		Base:       Base{[3][3]uint8{}, 0},
 		CompSide:   uint8(rand.Int31n(2) + 1),
 		CompStatus: Motive,
-		UUID:       uuid,
 	}
 	return &gs, err
 }

@@ -14,3 +14,7 @@ type dto struct {
 	Status     status     `json:"status"`
 	PlayerSide playerSide `json:"player_side"`
 }
+
+func NewDTO() *dto {
+	return &dto{}
+}

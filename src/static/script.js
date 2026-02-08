@@ -1,7 +1,6 @@
 "use strict";
 
 const API = "http://localhost:8080";
-// let field = Array(3).fill().map(Array(3).fill(""));
 let fieldBIS = [];
 for (let i = 0; i < 3; i++) {
   fieldBIS[i] = Array(3).fill("");
@@ -20,12 +19,12 @@ function initBoard() {
       const cell = document.createElement("div");
       cell.className = "cell";
       // × ✖ ○ 𐤏
-      cell.textContent = "×";
-      if ((i * 3 + j) % 2 == 0) {
-        cell.textContent = "○";
-      }
+      // cell.textContent = "×";
+      // if ((i * 3 + j) % 2 == 0) {
+      //   cell.textContent = "○";
+      // }
       cell.dataset.index = i * 3 + j + 1;
-      // cell.addEventListener("click", () => updateGame());
+      cell.addEventListener("click", () => updateGame());
       fieldDOM.appendChild(cell);
     }
   }
@@ -56,7 +55,7 @@ function decodeSide(side) {
 function updateField() {
   for (let i = 0; i < 3; i++) {
     for (let j = 0; j < 3; j++) {
-      fieldDOM.children[i * 3 + j + 1].textContent = decodeSide(fieldBIS[i][j]);
+      fieldDOM.children[i * 3 + j].textContent = decodeSide(fieldBIS[i][j]);
     }
   }
 }
@@ -66,23 +65,35 @@ async function newGame() {
   const data = await response.json();
 
   UUIDBIS = data.uuid;
-  sideBIS = decodeSide(data.player_side);
   fieldBIS = data.field;
+  console.log(fieldBIS);
+  sideBIS = decodeSide(data.player_side);
+  updateDataBIS(fieldBIS, UUIDBIS);
 
   statusBarDOM.querySelector(".id").textContent = `Game ID: ${UUIDBIS}`;
   statusBarDOM.querySelector(".side").textContent = `Your side is ${sideBIS}`;
-  console.log(data);
   updateField();
+}
+
+const dataBIS = {
+  field: fieldBIS,
+  uuid: UUIDBIS,
+};
+
+function updateDataBIS(fieldBIS, UUIDBIS) {
+  dataBIS.field = fieldBIS;
+  dataBIS.uuid = UUIDBIS;
 }
 
 async function updateGame() {
   const response = await fetch(`${API}/game/${UUIDBIS}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(),
+    body: JSON.stringify(dataBIS),
   });
 
   const data = await response.json();
+  console.log(data);
 }
 
 initBoard();

@@ -2,7 +2,9 @@ package web
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
 	"service"
 
@@ -19,7 +21,6 @@ func NewGameHandler(s service.Service) *GameHandler {
 
 func (h *GameHandler) CreateGame(w http.ResponseWriter, r *http.Request) {
 	log.Println("create game")
-	var dto *dto
 
 	gs, err := h.s.CreateGameSession()
 	if err != nil {
@@ -29,36 +30,36 @@ func (h *GameHandler) CreateGame(w http.ResponseWriter, r *http.Request) {
 			http.StatusInternalServerError,
 		)
 	}
-	dto = toDTO(gs)
-	// fmt.Println(dto)
+	gs, err = h.s.GetGameSession(&(gs.UUID))
+
+	if gs.CompSide == uint8(rand.Int31n(2)+1) {
+		h.s.PutNextApologiseMove(gs)
+	}
+
+	dto := toDTO(gs)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(dto)
+
 	log.Println("end create game")
 }
 
 func (h *GameHandler) UpdateGame(w http.ResponseWriter, r *http.Request) {
+	log.Println("update game")
 	uuid, err := uuid.Parse(r.PathValue("uuid"))
 	if err != nil {
 		http.Error(w, "Invalid UUID format", http.StatusBadRequest)
 	}
 
+	log.Println("end parse uuid")
+
 	// dto
-	var dto *dto
+	dto := NewDTO()
 	dto.UUID = uuid
-	if json.NewDecoder(r.Body).Decode(dto) != nil {
+	if err := json.NewDecoder(r.Body).Decode(dto); err != nil {
+		fmt.Println(err)
 		http.Error(w, "Invalid JSON file", http.StatusBadRequest)
 		return
 	}
-
-	// check this game is existed
-	// if it existed then we send it to user
-	// if _, err := h.s.GetGameSession(&uuid); err != nil {
-	// 	gs := h.s.CreateGameSession(&uuid)
-	// 	dto := toDTO(gs)
-	// 	w.Header().Set("Content-Type", "application/json")
-	// 	json.NewEncoder(w).Encode(dto)
-	// 	return
-	// }
 
 	// transformation
 	gs := toDomain(dto)
@@ -69,6 +70,7 @@ func (h *GameHandler) UpdateGame(w http.ResponseWriter, r *http.Request) {
 	// check before
 	err = h.s.GameChangeValidate(&(dto.UUID))
 	if err != nil {
+		log.Println("ERROR:", err)
 		http.Error(w, "Game not changed", http.StatusBadRequest)
 	}
 
@@ -84,4 +86,5 @@ func (h *GameHandler) UpdateGame(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(dto)
+	log.Println("end update game")
 }
