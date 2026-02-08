@@ -3,6 +3,7 @@ package datasource
 import (
 	"domain"
 	"errors"
+	"log"
 
 	"github.com/google/uuid"
 )
@@ -11,9 +12,15 @@ func NewMap() *Map {
 	return &Map{m: make(map[uuid.UUID]Model)}
 }
 
-func (m *Map) SaveModel(gs *domain.GameSession) {
+func (m *Map) SaveModel(gs *domain.GameSession) error {
+	log.Println("save model")
+	if _, ok := m.Load(&(gs.UUID)); ok {
+		return errors.New("can't save model")
+	}
+
 	mod := toModel(gs)
 	m.Store(&mod.uuid, mod)
+	return nil
 }
 
 func (m *Map) GetModel(uuid *uuid.UUID) (*domain.GameSession, error) {

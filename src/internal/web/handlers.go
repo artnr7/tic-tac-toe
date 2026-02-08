@@ -2,7 +2,7 @@ package web
 
 import (
 	"encoding/json"
-	"html/template"
+	"log"
 	"net/http"
 	"service"
 
@@ -17,10 +17,23 @@ func NewGameHandler(s service.Service) *GameHandler {
 	return &GameHandler{s: s}
 }
 
-func (h *GameHandler) Root(w http.ResponseWriter, r *http.Request) {
-	tmpl := template.Must(template.ParseFiles("web/index.html"))
+func (h *GameHandler) CreateGame(w http.ResponseWriter, r *http.Request) {
+	log.Println("create game")
+	var dto *dto
 
-	tmpl.Execute(w, nil)
+	gs, err := h.s.CreateGameSession()
+	if err != nil {
+		http.Error(
+			w,
+			"can't create new game session",
+			http.StatusInternalServerError,
+		)
+	}
+	dto = toDTO(gs)
+	// fmt.Println(dto)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(dto)
+	log.Println("end create game")
 }
 
 func (h *GameHandler) UpdateGame(w http.ResponseWriter, r *http.Request) {
@@ -39,13 +52,13 @@ func (h *GameHandler) UpdateGame(w http.ResponseWriter, r *http.Request) {
 
 	// check this game is existed
 	// if it existed then we send it to user
-	if _, err := h.s.GetGameSession(&uuid); err != nil {
-		gs := h.s.CreateGameSession(&uuid)
-		dto := toDTO(gs)
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(dto)
-		return
-	}
+	// if _, err := h.s.GetGameSession(&uuid); err != nil {
+	// 	gs := h.s.CreateGameSession(&uuid)
+	// 	dto := toDTO(gs)
+	// 	w.Header().Set("Content-Type", "application/json")
+	// 	json.NewEncoder(w).Encode(dto)
+	// 	return
+	// }
 
 	// transformation
 	gs := toDomain(dto)

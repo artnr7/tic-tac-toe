@@ -25,7 +25,8 @@ func CreateApp() fx.Option {
 
 func RegisterRoutes(h *web.GameHandler, mtx *http.ServeMux) {
 	mtx.HandleFunc("POST /game/{uuid}/", h.UpdateGame)
-	mtx.Handle("/", http.FileServer(http.Dir("web")))
+	mtx.HandleFunc("POST /game/create_game", h.CreateGame)
+	mtx.Handle("/", http.FileServer(http.Dir("static")))
 	http.ListenAndServe(":8080", mtx)
 }
 
