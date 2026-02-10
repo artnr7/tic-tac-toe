@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="main">
+      <button class="new_game_btn" onclick="newGame()">New Game</button>
+      <div class="board" id="board"></div>
+      <div class="status_bar" id="status_bar"></div>
+    </div>
+
+    <script src="script.js">
+      // // Обновление отображения
+      // function updateBoard() {
+      //   Array.from(field.children).forEach((cell, i) => {
+      //     cell.textContent = board[i];
+      //     if (board[i]) cell.classList.add("filled");
+      //   });
+      // }
+      // async function newGame() {
+      //   // await fetch(`${API_URL}/new-game`, { method: "POST" });
+      //   board = Array(9).fill("");
+      //   currentPlayer = "X";
+      //   // updateStatus("Ваша очередь (X)");
+      //   createBoard();
+      // }
+      // createBoard();
+    </script>
+  </body>
+</html>

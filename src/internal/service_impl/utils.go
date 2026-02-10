@@ -24,14 +24,19 @@ func (s *ServiceImpl) GetGameSession(
 ) (*domain.GameSession, error) {
 	gs, err := s.repo.GetModel(uuid)
 	if err != nil {
-		return domain.NewGameSession(), errors.New("gamesession not found")
+		return &domain.GameSession{}, errors.New("gamesession not found")
 	}
 	return gs, nil
 }
 
-func (s *ServiceImpl) CreateGameSession(uuid *uuid.UUID) *domain.GameSession {
-	gs := domain.NewGameSession()
-	gs.UUID = *uuid
-	s.repo.SaveModel(gs)
-	return gs
+func (s *ServiceImpl) CreateGameSession() (*domain.GameSession, error) {
+	gs, err := domain.NewGameSession()
+	if err != nil {
+		return &domain.GameSession{}, err
+	}
+	err = s.repo.SaveModel(gs)
+	if err != nil {
+		return &domain.GameSession{}, err
+	}
+	return gs, nil
 }
