@@ -72,6 +72,14 @@ body {
   font-size: 30px;
 }
 
+.status {
+  font-size: 15px;
+}
+
+.whos_moving {
+  font-size: 15px;
+}
+
 .id {
   font-size: 15px;
 }

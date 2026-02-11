@@ -129,24 +129,28 @@ func drawornot(g domain.GameSession) bool {
 	return false
 }
 
+func IsCompFirstMove(gs *domain.GameSession) bool {
+	return rand.Int31n(2)+1 != int32(gs.CompSide)
+}
+
 // MakeNextMove put computer prefer next move with more productivity
 // with minimax strategy used
 func (g *ServiceImpl) MakeNextMove(gs *domain.GameSession) {
 	/* little optimization, always you should put your figure to the centre of the field, 'cause this is the most powerful strategy */
-	var firstMove uint8
+	var firstMoveInWholeGame uint8
 	for i := range gs.Base.Field {
 		for j := range gs.Base.Field[i] {
 			if gs.Base.Field[i][j] == domain.E {
 				continue
 			}
-			firstMove++
+			firstMoveInWholeGame++
 		}
 	}
-	if firstMove == 0 {
-		if rand.Int31n(2)+1 != int32(gs.CompSide) {
-			return
+	if firstMoveInWholeGame == 0 {
+		if IsCompFirstMove(gs) {
+			gs.Base.Field[1][1] = gs.CompSide
 		}
-		gs.Base.Field[1][1] = gs.CompSide
+		return
 	}
 
 	// minimax

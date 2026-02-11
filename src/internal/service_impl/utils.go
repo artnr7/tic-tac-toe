@@ -22,15 +22,15 @@ func (s *ServiceImpl) CreateGameSession() (*domain.GameSession, error) {
 }
 
 func (s *ServiceImpl) SetGameSession(gs *domain.GameSession) {
-	gsloc, _ := s.repo.GetModel(&(gs.UUID))
+	// gsloc, _ := s.repo.GetModel(&(gs.UUID))
 	// хз что делать с этой переменной ошибки,
 	// проверка была раньше на то что игра
 	// существует
 	// Надо лучше продумывать архитектуру
 
-	gsloc.Base.Field = gs.Base.Field
-	gsloc.UUID = gs.UUID
-	gsloc.CompStatus = gs.CompStatus
+	// gsloc.Base.Field = gs.Base.Field
+	// gsloc.UUID = gs.UUID
+	// gsloc.CompStatus = gs.CompStatus
 }
 
 func (s *ServiceImpl) GetGameSession(

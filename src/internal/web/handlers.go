@@ -76,7 +76,7 @@ func (h *GameHandler) UpdateGame(w http.ResponseWriter, r *http.Request) {
 
 	// game status check -----
 	h.s.IsGameEnd(gs)
-	if gs.CompStatus == domain.Motive {
+	if gs.Status == domain.Motive {
 		h.s.MakeNextMove(gs)
 	}
 
