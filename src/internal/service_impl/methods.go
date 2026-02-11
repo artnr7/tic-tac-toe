@@ -3,6 +3,7 @@ package service_impl
 import (
 	"domain"
 	"errors"
+	"math/rand"
 
 	"github.com/google/uuid"
 )
@@ -128,20 +129,23 @@ func drawornot(g domain.GameSession) bool {
 	return false
 }
 
-// PutNextApologiseMove put computer prefer next move with more productivity
+// MakeNextMove put computer prefer next move with more productivity
 // with minimax strategy used
-func (g *ServiceImpl) PutNextApologiseMove(gs *domain.GameSession) {
+func (g *ServiceImpl) MakeNextMove(gs *domain.GameSession) {
 	/* little optimization, always you should put your figure to the centre of the field, 'cause this is the most powerful strategy */
-	var moveOrder uint8
+	var firstMove uint8
 	for i := range gs.Base.Field {
 		for j := range gs.Base.Field[i] {
 			if gs.Base.Field[i][j] == domain.E {
 				continue
 			}
-			moveOrder++
+			firstMove++
 		}
 	}
-	if gs.Base.Field[1][1] == domain.E && moveOrder == 0 {
+	if firstMove == 0 {
+		if rand.Int31n(2)+1 != int32(gs.CompSide) {
+			return
+		}
 		gs.Base.Field[1][1] = gs.CompSide
 	}
 
@@ -150,6 +154,8 @@ func (g *ServiceImpl) PutNextApologiseMove(gs *domain.GameSession) {
 	var w uint8
 
 	minimax(gs.Base, gs.CompSide, gs.CompSide, &w, &v)
+
+	gs.Base.Field[v.Y][v.X] = gs.CompSide
 	// fmt.Println(v)
 }
 
@@ -157,10 +163,12 @@ func isFilledBlock(block uint8) bool {
 	return block == domain.X || block == domain.O
 }
 
+// isItRightBlock returns is block is empty or X or O
 func isItRightBlock(block uint8) bool {
 	return block == domain.E || isFilledBlock(block)
 }
 
+// basesBlocksEq returns true if blocks is equal
 func basesBlocksEq(block1, block2 uint8) bool {
 	return block1 == block2
 }
@@ -178,32 +186,41 @@ func isFieldChanged(blocksCnt, oldBlocksCnt int8) bool {
 // acceptable game behavior
 // true = all fine, acceptable behavior
 // false = bad behavior, cheating
-func (g *ServiceImpl) GameChangeValidate(uuid *uuid.UUID) error {
-	gs, _ := g.repo.GetModel(uuid)
+func (g *ServiceImpl) GameChangeValidate(
+	newGS *domain.GameSession,
+	uuid *uuid.UUID,
+) error {
+	oldGS, _ := g.repo.GetModel(uuid)
 	acceptMove := false
-	gs.Base.BlocksCnt = 0
 
-	for i := range gs.Base.Field {
-		for j := range gs.Base.Field[i] {
+	for i := range newGS.Base.Field {
+		for j := range newGS.Base.Field[i] {
 
-			if !isItRightBlock(gs.Base.Field[i][j]) {
+			if !isItRightBlock(newGS.Base.Field[i][j]) {
 				return errors.New("wrong file format")
 			}
 
-			if isFilledBlock(gs.Base.Field[i][j]) {
-				gs.Base.BlocksCnt++
+			if isFilledBlock(newGS.Base.Field[i][j]) {
+				newGS.Base.BlocksCnt++
 			}
 
 			// Если у нас один блок не совпадает в
 			// поле не совпадает, то это нормально,
 			// потому что возможно противник
 			// сделал ход
-			if !basesBlocksEq(
-				gs.Base.Field[i][j],
-				gs.OldBase.Field[i][j],
+			if // если у нас блок нового поля не равно блоку старого
+			!basesBlocksEq(newGS.Base.Field[i][j],
+				oldGS.Base.Field[i][j],
 			) &&
-				!isOpposideSideBlockMove(gs.Base.Field[i][j], gs.CompSide) {
-				if acceptMove {
+				// и эти блоки относятся к разным сторонам игры
+				isOpposideSideBlockMove(
+					newGS.Base.Field[i][j],
+					oldGS.CompSide,
+				) {
+				// то это нормально, ставим себе заметку, да один блок изменился
+				if // но если это не единичный случай
+				acceptMove {
+					// то возвращаем ошибку
 					return errors.New("wrong file format")
 				}
 				acceptMove = true
@@ -211,23 +228,21 @@ func (g *ServiceImpl) GameChangeValidate(uuid *uuid.UUID) error {
 		}
 	}
 
-	if !isFieldChanged(gs.Base.BlocksCnt, gs.OldBase.BlocksCnt) {
+	if !isFieldChanged(newGS.Base.BlocksCnt, oldGS.Base.BlocksCnt) {
 		return errors.New("field not changed")
 	}
 
 	return nil
 }
 
-func (g *ServiceImpl) IsGameEnd(uuid *uuid.UUID) domain.Status {
-	gs, _ := g.repo.GetModel(uuid)
+func (g *ServiceImpl) IsGameEnd(gs *domain.GameSession) {
 	if win(&gs.Base, gs.CompSide) {
-		gs.CompStatus = domain.Vic
+		gs.Status = domain.Vic
 	} else if win(&gs.Base, 3-gs.CompSide) {
-		gs.CompStatus = domain.Def
+		gs.Status = domain.Def
 	} else if drawornot(*gs) {
-		gs.CompStatus = domain.Draw
+		gs.Status = domain.Draw
 	} else {
-		gs.CompStatus = domain.Motive
+		gs.Status = domain.Motive
 	}
-	return gs.CompStatus
 }

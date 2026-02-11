@@ -7,6 +7,7 @@ import (
 )
 
 type Repository interface {
+	CreateModel(gs *domain.GameSession) error
 	SaveModel(gs *domain.GameSession) error
 	GetModel(id *uuid.UUID) (*domain.GameSession, error)
 }

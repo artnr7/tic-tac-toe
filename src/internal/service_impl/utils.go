@@ -7,6 +7,20 @@ import (
 	"github.com/google/uuid"
 )
 
+func (s *ServiceImpl) CreateGameSession() (*domain.GameSession, error) {
+	gs, err := domain.NewGameSession()
+	if err != nil {
+		return &domain.GameSession{}, err
+	}
+
+	// err = s.repo.CreateModel(gs)
+	// if err != nil {
+	// 	return &domain.GameSession{}, err
+	// }
+
+	return gs, nil
+}
+
 func (s *ServiceImpl) SetGameSession(gs *domain.GameSession) {
 	gsloc, _ := s.repo.GetModel(&(gs.UUID))
 	// хз что делать с этой переменной ошибки,
@@ -29,14 +43,20 @@ func (s *ServiceImpl) GetGameSession(
 	return gs, nil
 }
 
-func (s *ServiceImpl) CreateGameSession() (*domain.GameSession, error) {
-	gs, err := domain.NewGameSession()
+func (s *ServiceImpl) PutGameSession(gs *domain.GameSession) error {
+	err := s.repo.CreateModel(gs)
 	if err != nil {
-		return &domain.GameSession{}, err
+		return err
 	}
-	err = s.repo.SaveModel(gs)
+
+	return nil
+}
+
+func (s *ServiceImpl) UpdateGameSession(gs *domain.GameSession) error {
+	err := s.repo.SaveModel(gs)
 	if err != nil {
-		return &domain.GameSession{}, err
+		return err
 	}
-	return gs, nil
+
+	return nil
 }

@@ -1,10 +1,9 @@
 package web
 
 import (
+	"domain"
 	"encoding/json"
-	"fmt"
 	"log"
-	"math/rand"
 	"net/http"
 	"service"
 
@@ -21,6 +20,7 @@ func NewGameHandler(s service.Service) *GameHandler {
 
 func (h *GameHandler) CreateGame(w http.ResponseWriter, r *http.Request) {
 	log.Println("create game")
+	defer log.Println("end create game")
 
 	gs, err := h.s.CreateGameSession()
 	if err != nil {
@@ -30,61 +30,58 @@ func (h *GameHandler) CreateGame(w http.ResponseWriter, r *http.Request) {
 			http.StatusInternalServerError,
 		)
 	}
-	gs, err = h.s.GetGameSession(&(gs.UUID))
+	h.s.MakeNextMove(gs)
 
-	if gs.CompSide == uint8(rand.Int31n(2)+1) {
-		h.s.PutNextApologiseMove(gs)
+	err = h.s.PutGameSession(gs)
+	if err != nil {
+		http.Error(
+			w,
+			"can't create new game session: db error",
+			http.StatusInternalServerError,
+		)
 	}
 
 	dto := toDTO(gs)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(dto)
-
-	log.Println("end create game")
 }
 
 func (h *GameHandler) UpdateGame(w http.ResponseWriter, r *http.Request) {
 	log.Println("update game")
+	defer log.Println("end update game")
+
+	// parsing
 	uuid, err := uuid.Parse(r.PathValue("uuid"))
 	if err != nil {
 		http.Error(w, "Invalid UUID format", http.StatusBadRequest)
 	}
 
-	log.Println("end parse uuid")
-
 	// dto
 	dto := NewDTO()
 	dto.UUID = uuid
 	if err := json.NewDecoder(r.Body).Decode(dto); err != nil {
-		fmt.Println(err)
+		// fmt.Println(err)
 		http.Error(w, "Invalid JSON file", http.StatusBadRequest)
 		return
 	}
 
-	// transformation
 	gs := toDomain(dto)
-	h.s.SetGameSession(gs)
-	// ok, we have refreshed gs in the repo
 
-	// business logic
-	// check before
-	err = h.s.GameChangeValidate(&(dto.UUID))
+	// business logic ----
+	err = h.s.GameChangeValidate(gs, &(gs.UUID))
 	if err != nil {
-		log.Println("ERROR:", err)
+		// log.Println("ERROR:", err)
 		http.Error(w, "Game not changed", http.StatusBadRequest)
 	}
 
-	// if isn't game end
-	// if h.s.IsGameEnd(&(dto.UUID)) == domain.Motive {
-	// 	// prepare next move
-	// 	h.s.PutNextApologiseMove(&(dto.UUID))
-	// }
+	// game status check -----
+	h.s.IsGameEnd(gs)
+	if gs.CompStatus == domain.Motive {
+		h.s.MakeNextMove(gs)
+	}
 
-	// transformation
-	gs, _ = h.s.GetGameSession(&(dto.UUID))
 	dto = toDTO(gs)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(dto)
-	log.Println("end update game")
 }

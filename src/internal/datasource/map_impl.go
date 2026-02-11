@@ -12,10 +12,26 @@ func NewMap() *Map {
 	return &Map{m: make(map[uuid.UUID]Model)}
 }
 
-func (m *Map) SaveModel(gs *domain.GameSession) error {
-	log.Println("save model")
+func (m *Map) CreateModel(gs *domain.GameSession) error {
+	log.Println("create model in map")
+	defer log.Println("end create model in map")
+
 	if _, ok := m.Load(&(gs.UUID)); ok {
-		return errors.New("can't save model")
+		return errors.New("can't create model")
+	}
+
+	mod := toModel(gs)
+	m.Store(&mod.uuid, mod)
+
+	return nil
+}
+
+func (m *Map) SaveModel(gs *domain.GameSession) error {
+	log.Println("save model in map")
+	defer log.Println("end save model in map")
+
+	if _, ok := m.Load(&(gs.UUID)); !ok {
+		return errors.New("model is not existed")
 	}
 
 	mod := toModel(gs)
