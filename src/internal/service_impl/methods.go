@@ -3,6 +3,8 @@ package service_impl
 import (
 	"domain"
 	"errors"
+	"fmt"
+	"log"
 	"math/rand"
 
 	"github.com/google/uuid"
@@ -30,12 +32,30 @@ func inc(winRow *uint8, el, side uint8) {
 }
 
 func win(base *domain.Base, side uint8) bool {
+	// fmt.Println("win")
 	var hWinRow, vWinRow, d1WinRow, d2WinRow uint8
 
 	for i := range base.Field {
 
 		hWinRow, vWinRow = 0, 0
 		for j := range base.Field[i] {
+			// fmt.Println(
+			// 	"base = ",
+			// 	base,
+			// 	"\nhWinRow = ",
+			// 	hWinRow,
+			// 	"\nvWinRow = ",
+			// 	vWinRow,
+			// 	"\nd1WinRow = ",
+			// 	d1WinRow,
+			// 	"\nd2WinRow = ",
+			// 	d2WinRow,
+			// 	"\ni = ", i,
+			// 	"\nj = ", j,
+			// 	"\nbase.Field[i][j] = ", base.Field[i][j],
+			// 	"\nbase.Field[j][i] = ", base.Field[j][i],
+			// 	"\nside = ", side,
+			// )
 			inc(&hWinRow, base.Field[i][j], side)
 			inc(&vWinRow, base.Field[j][i], side)
 			if i == j {
@@ -48,11 +68,13 @@ func win(base *domain.Base, side uint8) bool {
 
 		// main statement
 		if hWinRow == 3 || vWinRow == 3 || d1WinRow == 3 || d2WinRow == 3 {
+			// fmt.Println("WWWWWWWWWOOOOOOOOONNNNNNNNNN")
 			return true
 		}
 
 	}
 
+	fmt.Println("end win")
 	return false
 }
 
@@ -84,6 +106,7 @@ func win(base *domain.Base, side uint8) bool {
 // Описание алгоритма:
 // Вызываем
 func minimax(b domain.Base, compSide, curSide uint8, w *uint8, v *domain.Vec) {
+	fmt.Println("minimax")
 	var move domain.Vec
 
 	for i := range b.Field {
@@ -93,6 +116,15 @@ func minimax(b domain.Base, compSide, curSide uint8, w *uint8, v *domain.Vec) {
 				move = domain.Vec{int8(i), int8(j)}
 				curB := b
 				curB.Field[i][j] = curSide
+				// fmt.Println(
+				// 	"************",
+				// 	curB,
+				// 	curSide,
+				// 	compSide,
+				// 	*v,
+				// 	*w,
+				// 	"**************",
+				// )
 
 				if win(&curB, curSide) && curSide == compSide &&
 					*w < domain.Vic {
@@ -118,14 +150,16 @@ func minimax(b domain.Base, compSide, curSide uint8, w *uint8, v *domain.Vec) {
 }
 
 func drawornot(g domain.GameSession) bool {
-	var v *domain.Vec
-	var w *uint8
-	minimax(g.Base, g.CompSide, g.CompSide, w, v)
+	fmt.Println("drawornot")
+	var v domain.Vec
+	var w uint8
+	minimax(g.Base, g.CompSide, g.CompSide, &w, &v)
 
-	if *w == domain.Draw {
+	if w == domain.Draw {
 		return true
 	}
 
+	fmt.Println("end drawornot")
 	return false
 }
 
@@ -136,31 +170,40 @@ func IsCompFirstMove(gs *domain.GameSession) bool {
 // MakeNextMove put computer prefer next move with more productivity
 // with minimax strategy used
 func (g *ServiceImpl) MakeNextMove(gs *domain.GameSession) {
+	log.Println("make next move")
 	/* little optimization, always you should put your figure to the centre of the field, 'cause this is the most powerful strategy */
-	var firstMoveInWholeGame uint8
+	var firstMoveInWholeGame bool = true
 	for i := range gs.Base.Field {
 		for j := range gs.Base.Field[i] {
-			if gs.Base.Field[i][j] == domain.E {
-				continue
+			if gs.Base.Field[i][j] != domain.E {
+				firstMoveInWholeGame = false
+				break
 			}
-			firstMoveInWholeGame++
 		}
 	}
-	if firstMoveInWholeGame == 0 {
+	if firstMoveInWholeGame {
 		if IsCompFirstMove(gs) {
 			gs.Base.Field[1][1] = gs.CompSide
+			gs.Base.BlocksCnt = 1
 		}
 		return
 	}
 
 	// minimax
 	var v domain.Vec
-	var w uint8
+	var w uint8 = domain.Motive
+	// fmt.Println(
+	// 	"************\n",
+	// 	&v,
+	// 	&w,
+	// 	"\n**************",
+	// )
 
 	minimax(gs.Base, gs.CompSide, gs.CompSide, &w, &v)
+	// fmt.Println("------------- v is ", v)
 
 	gs.Base.Field[v.Y][v.X] = gs.CompSide
-	// fmt.Println(v)
+	log.Println("end make next move")
 }
 
 func isFilledBlock(block uint8) bool {
@@ -239,14 +282,22 @@ func (g *ServiceImpl) GameChangeValidate(
 	return nil
 }
 
-func (g *ServiceImpl) IsGameEnd(gs *domain.GameSession) {
-	if win(&gs.Base, gs.CompSide) {
-		gs.Status = domain.Vic
-	} else if win(&gs.Base, 3-gs.CompSide) {
-		gs.Status = domain.Def
-	} else if drawornot(*gs) {
-		gs.Status = domain.Draw
-	} else {
-		gs.Status = domain.Motive
+func (g *ServiceImpl) IsGameEnd(gs *domain.GameSession) error {
+	fmt.Println("is game end")
+	oldGS, err := g.repo.GetModel(&(gs.UUID))
+	if err != nil {
+		return err
 	}
+	gs.CompSide = oldGS.CompSide
+	if win(&gs.Base, gs.CompSide) {
+		gs.CompStatus = domain.Vic
+	} else if win(&gs.Base, 3-gs.CompSide) {
+		gs.CompStatus = domain.Def
+	} else if drawornot(*gs) {
+		gs.CompStatus = domain.Draw
+	} else {
+		gs.CompStatus = domain.Motive
+	}
+	fmt.Println("end is game end")
+	return nil
 }

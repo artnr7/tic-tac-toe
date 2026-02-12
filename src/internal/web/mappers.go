@@ -6,7 +6,7 @@ func toDTO(gs *domain.GameSession) *dto {
 	return &dto{
 		Field:      gs.Base.Field,
 		UUID:       gs.UUID,
-		Status:     status(gs.Status),
+		Status:     status(gs.CompStatus),
 		PlayerSide: playerSide((3 - uint8(gs.CompSide))),
 	}
 }

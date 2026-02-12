@@ -48,6 +48,7 @@ func (s *ServiceImpl) PutGameSession(gs *domain.GameSession) error {
 	if err != nil {
 		return err
 	}
+	// s.repo.Print(&(gs.UUID))
 
 	return nil
 }

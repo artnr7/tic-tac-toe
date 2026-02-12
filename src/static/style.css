@@ -1,6 +1,12 @@
+:root {
+  font-family: sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+}
+
 body {
-  background: linear-gradient(90deg, #c6da5f, #fa7503);
-  /* background: linear-gradient(90deg, #ffc800, #d60303); */
+  /* background: linear-gradient(90deg, #c6da5f, #fa7503); */
+  background: linear-gradient(90deg, #f5c800, #d60303);
   /* height: 90vh; */
 }
 
@@ -16,8 +22,9 @@ body {
 }
 
 .new_game_btn {
-  /* border: 0px; */
-  background: #01a7e5;
+  border: 1px;
+  padding: 5px 5px 5px 5px;
+  background: #f5c800;
   font-size: 30px;
 }
 
@@ -40,46 +47,46 @@ body {
   /* cursor: pointer; */
   align-items: center;
   justify-content: center;
-  background: #23dfc5;
+  background: #f5c800;
 }
 
 .cell:hover:not(.filled) {
-  background: #01a7e5;
+  background: #d60303;
 }
 
 .cell.filled {
   cursor: default;
 }
 
-.status_bar {
+#status_bar {
   display: flex;
   flex-direction: column;
 
 
   width: 400px;
-  border: 2px soid #000;
+  border: 1px solid #000;
   padding-left: 35px;
-  background: #01a7e5;
+  background: #f5c800;
 
-  font-weight: 700;
+  font-weight: 600;
 }
 
-.status_bar:hover {
+#status_bar:hover {
   background: #01a764;
 }
 
-.side {
+#side {
   font-size: 30px;
 }
 
-.status {
+#status {
   font-size: 15px;
 }
 
-.whos_moving {
+#whos_moving {
   font-size: 15px;
 }
 
-.id {
+#uuid {
   font-size: 15px;
 }

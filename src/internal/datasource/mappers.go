@@ -4,18 +4,18 @@ import "domain"
 
 func toModel(gs *domain.GameSession) *Model {
 	return &Model{
-		uuid:       gs.UUID,
-		field:      gs.Base.Field,
-		CompSide:   gs.CompSide,
-		CompStatus: Status(gs.Status),
+		uuid:     gs.UUID,
+		Base:     Base(gs.Base),
+		CompSide: gs.CompSide,
+		Status:   Status(gs.CompStatus),
 	}
 }
 
 func toDomain(m *Model) *domain.GameSession {
 	return &domain.GameSession{
-		UUID:     m.uuid,
-		Base:     domain.Base{m.field, int8(0)},
-		CompSide: m.CompSide,
-		Status:   domain.Status(m.CompStatus),
+		UUID:       m.uuid,
+		Base:       domain.Base{m.Base.Field, m.Base.BlocksCnt},
+		CompSide:   m.CompSide,
+		CompStatus: domain.Status(m.Status),
 	}
 }

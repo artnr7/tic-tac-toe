@@ -33,10 +33,10 @@ type Base struct {
 type Status uint8
 
 type GameSession struct {
-	UUID     uuid.UUID
-	Base     Base
-	CompSide uint8
-	Status   Status
+	UUID       uuid.UUID
+	Base       Base
+	CompSide   uint8
+	CompStatus Status
 }
 
 func NewGameSession() (*GameSession, error) {
@@ -45,10 +45,10 @@ func NewGameSession() (*GameSession, error) {
 		return &GameSession{}, errors.New("can't create uuid")
 	}
 	gs := GameSession{
-		UUID:     uuid,
-		Base:     Base{[3][3]uint8{}, 0},
-		CompSide: uint8(rand.Int31n(2) + 1),
-		Status:   Motive,
+		UUID:       uuid,
+		Base:       Base{[3][3]uint8{}, 0},
+		CompSide:   uint8(rand.Int31n(2) + 1),
+		CompStatus: Motive,
 	}
 	return &gs, err
 }

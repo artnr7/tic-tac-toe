@@ -10,7 +10,7 @@ import (
 type Service interface {
 	MakeNextMove(*domain.GameSession)
 	GameChangeValidate(*domain.GameSession, *uuid.UUID) error
-	IsGameEnd(*domain.GameSession)
+	IsGameEnd(*domain.GameSession) error
 
 	// getter/setter/etc.
 	CreateGameSession() (*domain.GameSession, error)

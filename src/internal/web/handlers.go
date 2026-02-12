@@ -3,6 +3,7 @@ package web
 import (
 	"domain"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"service"
@@ -41,6 +42,8 @@ func (h *GameHandler) CreateGame(w http.ResponseWriter, r *http.Request) {
 		)
 	}
 
+	fmt.Println(gs.Base.Field)
+
 	dto := toDTO(gs)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(dto)
@@ -48,7 +51,6 @@ func (h *GameHandler) CreateGame(w http.ResponseWriter, r *http.Request) {
 
 func (h *GameHandler) UpdateGame(w http.ResponseWriter, r *http.Request) {
 	log.Println("update game")
-	defer log.Println("end update game")
 
 	// parsing
 	uuid, err := uuid.Parse(r.PathValue("uuid"))
@@ -60,7 +62,6 @@ func (h *GameHandler) UpdateGame(w http.ResponseWriter, r *http.Request) {
 	dto := NewDTO()
 	dto.UUID = uuid
 	if err := json.NewDecoder(r.Body).Decode(dto); err != nil {
-		// fmt.Println(err)
 		http.Error(w, "Invalid JSON file", http.StatusBadRequest)
 		return
 	}
@@ -70,18 +71,22 @@ func (h *GameHandler) UpdateGame(w http.ResponseWriter, r *http.Request) {
 	// business logic ----
 	err = h.s.GameChangeValidate(gs, &(gs.UUID))
 	if err != nil {
-		// log.Println("ERROR:", err)
 		http.Error(w, "Game not changed", http.StatusBadRequest)
 	}
 
 	// game status check -----
 	h.s.IsGameEnd(gs)
-	if gs.Status == domain.Motive {
+	if gs.CompStatus == domain.Motive {
 		h.s.MakeNextMove(gs)
 	}
+
+	fmt.Printf("--------\n")
+	fmt.Printf("Status = %v\nField = %v", gs.CompStatus, gs.Base.Field)
+	fmt.Printf("\n--------\n")
 
 	dto = toDTO(gs)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(dto)
+	log.Println("end update game")
 }

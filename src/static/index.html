@@ -8,9 +8,14 @@
   </head>
   <body>
     <div class="main">
-      <button class="new_game_btn" onclick="newGame(dataBIS)">New Game</button>
+      <button class="new_game_btn" id="new_game_btn">New Game</button>
       <div class="board" id="board"></div>
-      <div class="status_bar" id="status_bar"></div>
+      <div id="status_bar">
+        <div id="side"></div>
+        <div id="whos_moving"></div>
+        <div id="status"></div>
+        <div id="uuid"></div>
+      </div>
     </div>
 
     <script src="script.js">

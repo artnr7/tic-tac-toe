@@ -3,6 +3,7 @@ package datasource
 import (
 	"domain"
 	"errors"
+	"fmt"
 	"log"
 
 	"github.com/google/uuid"
@@ -14,15 +15,16 @@ func NewMap() *Map {
 
 func (m *Map) CreateModel(gs *domain.GameSession) error {
 	log.Println("create model in map")
-	defer log.Println("end create model in map")
 
 	if _, ok := m.Load(&(gs.UUID)); ok {
+		log.Println("gs existes in db")
 		return errors.New("can't create model")
 	}
 
 	mod := toModel(gs)
 	m.Store(&mod.uuid, mod)
 
+	log.Println("end create model in map")
 	return nil
 }
 
@@ -55,4 +57,14 @@ func (m *Map) GetModel(uuid *uuid.UUID) (*domain.GameSession, error) {
 	}
 
 	return toDomain(&v), nil
+}
+
+func (m *Map) Print(uuid *uuid.UUID) {
+	if v, ok := m.Load(uuid); ok {
+		fmt.Println("+++++++++++++ MAP +++++++++++++")
+		fmt.Println(v)
+		fmt.Println("+++++++++++++ MAP +++++++++++++")
+	} else if !ok {
+		fmt.Println("fewfwefwwefwefewfwef3209r732098")
+	}
 }
