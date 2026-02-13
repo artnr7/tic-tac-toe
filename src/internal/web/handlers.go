@@ -71,12 +71,15 @@ func (h *GameHandler) UpdateGame(w http.ResponseWriter, r *http.Request) {
 	// business logic ----
 	err = h.s.GameChangeValidate(gs, &(gs.UUID))
 	if err != nil {
+		log.Println("ERROR: ", err)
 		http.Error(w, "Game not changed", http.StatusBadRequest)
+		return
 	}
 
 	// game status check -----
 	h.s.IsGameEnd(gs)
 	if gs.CompStatus == domain.Motive {
+		fmt.Println("-1-1-1--1-1-1-")
 		h.s.MakeNextMove(gs)
 	}
 
@@ -84,9 +87,13 @@ func (h *GameHandler) UpdateGame(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("Status = %v\nField = %v", gs.CompStatus, gs.Base.Field)
 	fmt.Printf("\n--------\n")
 
+	h.s.UpdateGameSession(gs)
+
 	dto = toDTO(gs)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(dto)
-	log.Println("end update game")
+	log.Println(
+		"end update game================================================================================================",
+	)
 }

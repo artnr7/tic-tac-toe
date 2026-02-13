@@ -10,35 +10,22 @@ import (
 	"github.com/google/uuid"
 )
 
-// func whoseMove(base *domain.Base) bool {
-// 	var xes, oes int8
-// 	for i := range base.Field {
-// 		for j := range i {
-// 			if j == domain.X {
-// 				xes++
-// 			} else {
-// 				oes++
-// 			}
-// 		}
-// 	}
-//
-// 	return xes > oes
-// }
-
 func inc(winRow *uint8, el, side uint8) {
 	if el == side {
 		(*winRow)++
 	}
 }
 
-func win(base *domain.Base, side uint8) bool {
-	// fmt.Println("win")
-	var hWinRow, vWinRow, d1WinRow, d2WinRow uint8
+func winOrDraw(base *domain.Base, side uint8) int {
+	var hWinRow, vWinRow, d1WinRow, d2WinRow, cnt uint8
 
 	for i := range base.Field {
 
 		hWinRow, vWinRow = 0, 0
 		for j := range base.Field[i] {
+			if !isItEmptyBlock(base.Field[i][j]) {
+				cnt++
+			}
 			// fmt.Println(
 			// 	"base = ",
 			// 	base,
@@ -66,16 +53,59 @@ func win(base *domain.Base, side uint8) bool {
 			}
 		}
 
-		// main statement
 		if hWinRow == 3 || vWinRow == 3 || d1WinRow == 3 || d2WinRow == 3 {
-			// fmt.Println("WWWWWWWWWOOOOOOOOONNNNNNNNNN")
-			return true
+			return domain.Vic
 		}
 
 	}
 
-	fmt.Println("end win")
-	return false
+	if cnt == 9 {
+		return domain.Draw
+	}
+
+	return domain.Motive
+}
+
+func fsd(gs *domain.GameSession) domain.Vec {
+	fmt.Println("---------------------- FSD")
+	var (
+		cnt      int8
+		maxScore int16
+		fst      bool = true
+		move     domain.Vec
+	)
+	scores := []int16{}
+
+	for i := range gs.Base.Field {
+		for j := range gs.Base.Field[i] {
+			if gs.Base.Field[i][j] == domain.E {
+				curGS := *gs
+				curGS.Base.Field[i][j] = curGS.CompSide
+				// ->
+				scores = append(scores, 0)
+				minimax(curGS.Base, gs.CompSide, gs.CompSide, &scores[cnt], -1)
+				if fst {
+					maxScore = scores[cnt]
+					move = domain.Vec{int8(i), int8(j)}
+					fst = false
+				}
+				if scores[cnt] > maxScore {
+					maxScore = scores[cnt]
+					move = domain.Vec{int8(i), int8(j)}
+				}
+				fmt.Println("************")
+				fmt.Println("i = ", i)
+				fmt.Println("j = ", j)
+				fmt.Println("SCORE = ", scores[cnt])
+				fmt.Println("MAXSCORE = ", maxScore)
+				fmt.Println("MOVE = ", move)
+				fmt.Println("************")
+				cnt++
+				// ->
+			}
+		}
+	}
+	return move
 }
 
 // Главный принцип Минимакса – это
@@ -105,62 +135,75 @@ func win(base *domain.Base, side uint8) bool {
 //
 // Описание алгоритма:
 // Вызываем
-func minimax(b domain.Base, compSide, curSide uint8, w *uint8, v *domain.Vec) {
-	fmt.Println("minimax")
-	var move domain.Vec
-
+func minimax(
+	b domain.Base,
+	compSide, curSide uint8,
+	score *int16,
+	value int16,
+) {
+	value++
+	// fmt.Println("========================================== minimax")
 	for i := range b.Field {
 		for j := range b.Field[i] {
-			// ->
 			if b.Field[i][j] == domain.E {
-				move = domain.Vec{int8(i), int8(j)}
+				// ->
 				curB := b
 				curB.Field[i][j] = curSide
+
 				// fmt.Println(
 				// 	"************",
-				// 	curB,
+				// 	"\ni = ", i, "\nj = ", j,
+				// 	"\ncurb = \n",
+				// 	curB.Field[0],
+				// 	"\n",
+				// 	curB.Field[1],
+				// 	"\n",
+				// 	curB.Field[2],
+				// 	"\ncurside = ",
 				// 	curSide,
+				// 	"\ncompside = ",
 				// 	compSide,
-				// 	*v,
-				// 	*w,
-				// 	"**************",
 				// )
 
-				if win(&curB, curSide) && curSide == compSide &&
-					*w < domain.Vic {
-					*w = domain.Vic
+				status := winOrDraw(&curB, curSide)
+				// fmt.Println("status is = ", status)
+				if status == domain.Vic {
+					if curSide == compSide {
+						*score += 10 + value
+					} else {
+						*score -= 10 - value
+					}
 				}
-				if *w == domain.Vic {
+				if status == domain.Vic || status == domain.Draw {
+					// fmt.Println("--- score is ", *score)
 					return
 				}
+				// fmt.Println("**********************")
+
 				// Что значит 3-curSide? curSide может быть 1 или 2
-				minimax(curB, compSide, 3-curSide, w, v)
-				if *w == domain.Vic {
-					*v = move
-					return
-				}
+				minimax(curB, compSide, 3-curSide, score, value)
+				// ->
 			}
-			// ->
 		}
 	}
-	if *w < domain.Draw {
-		*w = domain.Draw
-		*v = move
-	}
-}
-
-func drawornot(g domain.GameSession) bool {
-	fmt.Println("drawornot")
-	var v domain.Vec
-	var w uint8
-	minimax(g.Base, g.CompSide, g.CompSide, &w, &v)
-
-	if w == domain.Draw {
-		return true
-	}
-
-	fmt.Println("end drawornot")
-	return false
+	// fmt.Println(
+	// 	"************",
+	// 	"\ncurb = \n",
+	// 	curB.Field[0],
+	// 	"\n",
+	// 	curB.Field[1],
+	// 	"\n",
+	// 	curB.Field[2],
+	// 	"\ncurside = ",
+	// 	curSide,
+	// 	"\ncompside = ",
+	// 	compSide,
+	// 	"\nv = ",
+	// 	*v,
+	// 	"\nw = ",
+	// 	*w,
+	// 	"**************",
+	// )
 }
 
 func IsCompFirstMove(gs *domain.GameSession) bool {
@@ -170,7 +213,9 @@ func IsCompFirstMove(gs *domain.GameSession) bool {
 // MakeNextMove put computer prefer next move with more productivity
 // with minimax strategy used
 func (g *ServiceImpl) MakeNextMove(gs *domain.GameSession) {
-	log.Println("make next move")
+	log.Println(
+		"********************************************************************make next move",
+	)
 	/* little optimization, always you should put your figure to the centre of the field, 'cause this is the most powerful strategy */
 	var firstMoveInWholeGame bool = true
 	for i := range gs.Base.Field {
@@ -190,19 +235,10 @@ func (g *ServiceImpl) MakeNextMove(gs *domain.GameSession) {
 	}
 
 	// minimax
-	var v domain.Vec
-	var w uint8 = domain.Motive
-	// fmt.Println(
-	// 	"************\n",
-	// 	&v,
-	// 	&w,
-	// 	"\n**************",
-	// )
-
-	minimax(gs.Base, gs.CompSide, gs.CompSide, &w, &v)
-	// fmt.Println("------------- v is ", v)
+	v := fsd(gs)
 
 	gs.Base.Field[v.Y][v.X] = gs.CompSide
+	gs.Base.BlocksCnt++
 	log.Println("end make next move")
 }
 
@@ -210,9 +246,13 @@ func isFilledBlock(block uint8) bool {
 	return block == domain.X || block == domain.O
 }
 
+func isItEmptyBlock(block uint8) bool {
+	return block == domain.E
+}
+
 // isItRightBlock returns is block is empty or X or O
 func isItRightBlock(block uint8) bool {
-	return block == domain.E || isFilledBlock(block)
+	return isItEmptyBlock(block) || isFilledBlock(block)
 }
 
 // basesBlocksEq returns true if blocks is equal
@@ -276,6 +316,8 @@ func (g *ServiceImpl) GameChangeValidate(
 	}
 
 	if !isFieldChanged(newGS.Base.BlocksCnt, oldGS.Base.BlocksCnt) {
+		fmt.Println(newGS.Base)
+		fmt.Println(oldGS.Base)
 		return errors.New("field not changed")
 	}
 
@@ -289,11 +331,11 @@ func (g *ServiceImpl) IsGameEnd(gs *domain.GameSession) error {
 		return err
 	}
 	gs.CompSide = oldGS.CompSide
-	if win(&gs.Base, gs.CompSide) {
+	if winOrDraw(&gs.Base, gs.CompSide) == domain.Vic {
 		gs.CompStatus = domain.Vic
-	} else if win(&gs.Base, 3-gs.CompSide) {
+	} else if winOrDraw(&gs.Base, 3-gs.CompSide) == domain.Vic {
 		gs.CompStatus = domain.Def
-	} else if drawornot(*gs) {
+	} else if winOrDraw(&gs.Base, gs.CompSide) == domain.Draw {
 		gs.CompStatus = domain.Draw
 	} else {
 		gs.CompStatus = domain.Motive
