@@ -21,7 +21,7 @@ func NewGameHandler(s service.Service) *GameHandler {
 
 func (h *GameHandler) CreateGame(w http.ResponseWriter, r *http.Request) {
 	log.Println("create game")
-	defer log.Println("end create game")
+	defer log.Println("end create game\n\n")
 
 	gs, err := h.s.CreateGameSession()
 	if err != nil {
@@ -94,6 +94,6 @@ func (h *GameHandler) UpdateGame(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(dto)
 	log.Println(
-		"end update game================================================================================================",
+		"end update game================================================================================================\n\n",
 	)
 }

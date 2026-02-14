@@ -66,148 +66,104 @@ func winOrDraw(base *domain.Base, side uint8) int {
 	return domain.Motive
 }
 
+func IsCompFirstMove(gs *domain.GameSession) bool {
+	return rand.Int31n(2)+1 != int32(gs.CompSide)
+}
+
+func isItCompSide(compSide, curSide uint8) bool {
+	return compSide == curSide
+}
+
 func fsd(gs *domain.GameSession) domain.Vec {
-	fmt.Println("---------------------- FSD")
-	var (
-		cnt      int8
-		maxScore int16
-		fst      bool = true
-		move     domain.Vec
-	)
-	scores := []int16{}
+	var v domain.Vec
+	var maxHeur int
+	var fst bool = true
 
 	for i := range gs.Base.Field {
 		for j := range gs.Base.Field[i] {
-			if gs.Base.Field[i][j] == domain.E {
-				curGS := *gs
-				curGS.Base.Field[i][j] = curGS.CompSide
+			if isItEmptyBlock(gs.Base.Field[i][j]) {
 				// ->
-				scores = append(scores, 0)
-				minimax(curGS.Base, gs.CompSide, gs.CompSide, &scores[cnt], -1)
+				curB := gs.Base
+				curB.Field[i][j] = gs.CompSide
+				heur := minimax(curB, gs.CompSide, gs.CompSide, -1)
 				if fst {
-					maxScore = scores[cnt]
-					move = domain.Vec{int8(i), int8(j)}
+					maxHeur = heur
+					v = domain.Vec{int8(i), int8(j)}
 					fst = false
 				}
-				if scores[cnt] > maxScore {
-					maxScore = scores[cnt]
-					move = domain.Vec{int8(i), int8(j)}
+
+				if heur > maxHeur {
+					maxHeur = heur
+					v = domain.Vec{int8(i), int8(j)}
 				}
-				fmt.Println("************")
-				fmt.Println("i = ", i)
-				fmt.Println("j = ", j)
-				fmt.Println("SCORE = ", scores[cnt])
-				fmt.Println("MAXSCORE = ", maxScore)
-				fmt.Println("MOVE = ", move)
-				fmt.Println("************")
-				cnt++
+				fmt.Println("***********")
+				fmt.Println("HEUR = ", heur)
+				fmt.Println("MAXHEUR = ", maxHeur)
+				fmt.Println("v = ", v)
+				fmt.Println("***********\n")
+
 				// ->
 			}
 		}
 	}
-	return move
+	return v
 }
 
-// Главный принцип Минимакса – это
-// нахождение варинта событий, в котором
-// возможно получить максимальную выгоду.
-// Градация успеха -> выигрыш -> ничья -> проигрыш
-// Т.к. значения дискретны и ограничены, то
-// алгоритм будет подразумевать только поиск
-// выигрыша, начиная с самого худшего
-// варианта – проигрыша, в частности порядок
-// поиска будет следующим
-// проигрыш -> ничья -> выигрыш
-// Если выигрыш найден, то дальнейший поиск не имеет смысла.
-// Если все варианты рассмотрены возвращается самый лучший вариант исхода
-//
-// Показатель ничьи -> заняты все клетки, и не
-// выполнено ни одно из условий выигрыша,
-// независимо от стороны
-//
-// Почему нет возможности возвращать только выигрыш?
-// Потому что если в ходе поиска была ничья и
-// мы её отбросили, а дальше будут
-// встречаться только поражения, то мы
-// упустим лучший вариант - ничью
-//
-// # Допустим проигрыш у нас по умолчанию передан
-//
-// Описание алгоритма:
-// Вызываем
-func minimax(
-	b domain.Base,
-	compSide, curSide uint8,
-	score *int16,
-	value int16,
-) {
+func minimax(b domain.Base, compSide, curSide uint8, value int) int {
+	// fmt.Println("minimax")
+	var heur, maxHeur, minHeur int
+	var fst bool
 	value++
-	// fmt.Println("========================================== minimax")
 	for i := range b.Field {
 		for j := range b.Field[i] {
-			if b.Field[i][j] == domain.E {
+			if isItEmptyBlock(b.Field[i][j]) {
 				// ->
 				curB := b
-				curB.Field[i][j] = curSide
-
-				// fmt.Println(
-				// 	"************",
-				// 	"\ni = ", i, "\nj = ", j,
-				// 	"\ncurb = \n",
-				// 	curB.Field[0],
-				// 	"\n",
-				// 	curB.Field[1],
-				// 	"\n",
-				// 	curB.Field[2],
-				// 	"\ncurside = ",
-				// 	curSide,
-				// 	"\ncompside = ",
-				// 	compSide,
-				// )
-
+				if value > 0 {
+					curB.Field[i][j] = curSide
+				}
 				status := winOrDraw(&curB, curSide)
-				// fmt.Println("status is = ", status)
-				if status == domain.Vic {
-					if curSide == compSide {
-						*score += 10 + value
+				switch status {
+				case domain.Vic:
+					if isItCompSide(compSide, curSide) {
+						return 10 - value
 					} else {
-						*score -= 10 - value
+						return -10
+					}
+				case domain.Draw:
+					return 0
+				}
+
+				heur = minimax(curB, compSide, 3-curSide, value)
+
+				if fst {
+					if isItCompSide(compSide, curSide) {
+						maxHeur = heur
+					} else {
+						minHeur = heur
+					}
+					fst = false
+				}
+
+				if isItCompSide(compSide, curSide) {
+					if heur > maxHeur {
+						maxHeur = heur
+					}
+				} else {
+					if heur < minHeur {
+						minHeur = heur
 					}
 				}
-				if status == domain.Vic || status == domain.Draw {
-					// fmt.Println("--- score is ", *score)
-					return
-				}
-				// fmt.Println("**********************")
 
-				// Что значит 3-curSide? curSide может быть 1 или 2
-				minimax(curB, compSide, 3-curSide, score, value)
 				// ->
 			}
 		}
 	}
-	// fmt.Println(
-	// 	"************",
-	// 	"\ncurb = \n",
-	// 	curB.Field[0],
-	// 	"\n",
-	// 	curB.Field[1],
-	// 	"\n",
-	// 	curB.Field[2],
-	// 	"\ncurside = ",
-	// 	curSide,
-	// 	"\ncompside = ",
-	// 	compSide,
-	// 	"\nv = ",
-	// 	*v,
-	// 	"\nw = ",
-	// 	*w,
-	// 	"**************",
-	// )
-}
-
-func IsCompFirstMove(gs *domain.GameSession) bool {
-	return rand.Int31n(2)+1 != int32(gs.CompSide)
+	if isItCompSide(compSide, curSide) {
+		return maxHeur
+	} else {
+		return minHeur
+	}
 }
 
 // MakeNextMove put computer prefer next move with more productivity
