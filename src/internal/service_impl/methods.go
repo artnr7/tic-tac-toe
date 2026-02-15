@@ -3,7 +3,6 @@ package service_impl
 import (
 	"domain"
 	"errors"
-	"fmt"
 	"math/rand"
 
 	"github.com/google/uuid"
@@ -236,8 +235,6 @@ func (g *ServiceImpl) GameChangeValidate(
 	}
 
 	if !isFieldChanged(newGS.Base.BlocksCnt, oldGS.Base.BlocksCnt) {
-		fmt.Println(newGS.Base)
-		fmt.Println(oldGS.Base)
 		return errors.New("field not changed")
 	}
 
