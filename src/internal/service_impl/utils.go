@@ -13,24 +13,7 @@ func (s *ServiceImpl) CreateGameSession() (*domain.GameSession, error) {
 		return &domain.GameSession{}, err
 	}
 
-	// err = s.repo.CreateModel(gs)
-	// if err != nil {
-	// 	return &domain.GameSession{}, err
-	// }
-
 	return gs, nil
-}
-
-func (s *ServiceImpl) SetGameSession(gs *domain.GameSession) {
-	// gsloc, _ := s.repo.GetModel(&(gs.UUID))
-	// хз что делать с этой переменной ошибки,
-	// проверка была раньше на то что игра
-	// существует
-	// Надо лучше продумывать архитектуру
-
-	// gsloc.Base.Field = gs.Base.Field
-	// gsloc.UUID = gs.UUID
-	// gsloc.CompStatus = gs.CompStatus
 }
 
 func (s *ServiceImpl) GetGameSession(
@@ -48,7 +31,6 @@ func (s *ServiceImpl) PutGameSession(gs *domain.GameSession) error {
 	if err != nil {
 		return err
 	}
-	// s.repo.Print(&(gs.UUID))
 
 	return nil
 }

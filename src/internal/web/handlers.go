@@ -59,15 +59,13 @@ func (h *GameHandler) UpdateGame(w http.ResponseWriter, r *http.Request) {
 
 	gs := toDomain(dto)
 
-	// business logic ----
+	// business logic
 	err = h.s.GameChangeValidate(gs, &(gs.UUID))
 	if err != nil {
-		// log.Println("ERROR: ", err)
 		http.Error(w, "Game not changed", http.StatusBadRequest)
 		return
 	}
 
-	// game status check -----
 	h.s.MakeNextMove(gs)
 
 	h.s.UpdateGameSession(gs)

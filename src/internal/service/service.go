@@ -14,7 +14,6 @@ type Service interface {
 
 	// getter/setter/etc.
 	CreateGameSession() (*domain.GameSession, error)
-	SetGameSession(*domain.GameSession)
 	GetGameSession(*uuid.UUID) (*domain.GameSession, error)
 	PutGameSession(*domain.GameSession) error
 	UpdateGameSession(*domain.GameSession) error

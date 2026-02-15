@@ -13,8 +13,11 @@ func toModel(gs *domain.GameSession) *Model {
 
 func toDomain(m *Model) *domain.GameSession {
 	return &domain.GameSession{
-		UUID:       m.uuid,
-		Base:       domain.Base{m.Base.Field, m.Base.BlocksCnt},
+		UUID: m.uuid,
+		Base: domain.Base{
+			Field:     m.Base.Field,
+			BlocksCnt: m.Base.BlocksCnt,
+		},
 		CompSide:   m.CompSide,
 		CompStatus: domain.Status(m.Status),
 	}
