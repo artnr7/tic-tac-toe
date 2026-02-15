@@ -7,4 +7,5 @@ use (
 	./internal/service/
 	./internal/service_impl/
 	./internal/web/
+	./internal/di/
 )

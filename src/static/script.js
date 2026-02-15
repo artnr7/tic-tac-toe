@@ -5,9 +5,9 @@ const API = "http://localhost:8080";
 const dataBIS = {
   field: [],
   uuid: undefined,
-  status: undefined,
+  player_status: undefined,
   player_side: undefined,
-  whos_playing: undefined,
+  whos_moving: undefined,
 };
 
 function initDataBIS(dataBIS) {
@@ -19,15 +19,17 @@ function initDataBIS(dataBIS) {
 function updateDataBIS(dataBIS, data) {
   dataBIS.field = data.field;
   dataBIS.uuid = data.uuid;
-  dataBIS.status = data.status;
+
+  if (data.status == 0) {
+    dataBIS.player_status = 2;
+  } else if (data.status == 2) {
+    dataBIS.player_status = 0;
+  } else {
+    dataBIS.player_status = data.status;
+  }
+
   dataBIS.player_side = data.player_side;
 }
-
-const statusBarBIS = {
-  // side: undefined,
-  whosMoving: undefined,
-  status: undefined,
-};
 
 const newGameBtn = document.getElementById("new_game_btn");
 newGameBtn.onclick = () => newGame(dataBIS);
@@ -53,11 +55,11 @@ const whosMovingDOM = document.getElementById("whos_moving");
 const statusDOM = document.getElementById("status");
 const uuidDOM = document.getElementById("uuid");
 // init
-function initStatusBarDOM(dataBIS, statusBarBIS) {
+function initStatusBarDOM(dataBIS) {
   console.log("init status bar DOM");
-  sideDOM.textContent = `Your side is ${statusBarBIS.side}`;
-  whosMovingDOM.textContent = `Who's moving?: ${statusBarBIS.whosMoving}`;
-  statusDOM.textContent = `Status: ${statusBarBIS.status}`;
+  sideDOM.textContent = `Your side is ${dataBIS.player_side}`;
+  whosMovingDOM.textContent = `Who's moving?: ${dataBIS.whos_moving}`;
+  statusDOM.textContent = `Status: ${dataBIS.player_status}`;
   uuidDOM.textContent = `Game ID: ${dataBIS.uuid}`;
 }
 
@@ -107,8 +109,8 @@ function updateField(dataBIS) {
 function updateDOM(dataBIS) {
   sideDOM.textContent = `Your side: ` + decodeSide(dataBIS.player_side);
   whosMovingDOM.textContent =
-    `Who's moving?: ` + decodeWhosMoving(dataBIS.whos_playing);
-  statusDOM.textContent = "Status: " + decodeStatus(dataBIS.status);
+    `Who's moving?: ` + decodeWhosMoving(dataBIS.whos_moving);
+  statusDOM.textContent = "Status: " + decodeStatus(dataBIS.player_status);
   uuidDOM.textContent = uuidDOM.textContent = `Game ID: ${dataBIS.uuid}`;
   updateField(dataBIS);
 }
@@ -119,7 +121,7 @@ async function newGame(dataBIS) {
   const response = await fetch(`${API}/game/create_game`, { method: "POST" });
   const data = await response.json();
   updateDataBIS(dataBIS, data);
-  dataBIS.whos_playing = WhosMovingState.Me;
+  dataBIS.whos_moving = WhosMovingState.Me;
   updateDOM(dataBIS);
 }
 
@@ -133,14 +135,15 @@ async function updateGame(i, j) {
   if (
     dataBIS.uuid == undefined ||
     dataBIS.field[i][j] != 0 ||
-    dataBIS.whos_playing != WhosMovingState.Me
+    dataBIS.whos_moving != WhosMovingState.Me ||
+    dataBIS.player_status != 3
   ) {
     return;
   }
 
   // business
   dataBIS.field[i][j] = dataBIS.player_side;
-  dataBIS.whos_playing = WhosMovingState.Computer;
+  dataBIS.whos_moving = WhosMovingState.Computer;
   updateDOM(dataBIS);
 
   // request
@@ -154,10 +157,11 @@ async function updateGame(i, j) {
   });
   const pr = response.json();
   pr.then(() => {
-    dataBIS.whos_playing = WhosMovingState.Me;
+    dataBIS.whos_moving = WhosMovingState.Me;
   });
 
   const data = await pr;
+  console.log(data.status);
 
   updateDataBIS(dataBIS, data);
   updateDOM(dataBIS);
@@ -165,4 +169,4 @@ async function updateGame(i, j) {
 
 initDataBIS(dataBIS);
 initBoard();
-initStatusBarDOM(dataBIS, statusBarBIS);
+initStatusBarDOM(dataBIS);

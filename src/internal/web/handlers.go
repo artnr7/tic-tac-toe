@@ -1,10 +1,7 @@
 package web
 
 import (
-	"domain"
 	"encoding/json"
-	"fmt"
-	"log"
 	"net/http"
 	"service"
 
@@ -20,9 +17,6 @@ func NewGameHandler(s service.Service) *GameHandler {
 }
 
 func (h *GameHandler) CreateGame(w http.ResponseWriter, r *http.Request) {
-	log.Println("create game")
-	defer log.Println("------------------end create game\n\n")
-
 	gs, err := h.s.CreateGameSession()
 	if err != nil {
 		http.Error(
@@ -42,24 +36,13 @@ func (h *GameHandler) CreateGame(w http.ResponseWriter, r *http.Request) {
 		)
 	}
 
-	fmt.Println("------------ CREATE")
-	fmt.Println("Status = ", gs.CompStatus)
-	fmt.Println("Field")
-	fmt.Println(gs.Base.Field[0])
-	fmt.Println(gs.Base.Field[1])
-	fmt.Println(gs.Base.Field[2])
-	fmt.Print("------------------\n\n")
-
 	dto := toDTO(gs)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(dto)
 }
 
+// TODO не отправлять поле, если статус игра завершена
 func (h *GameHandler) UpdateGame(w http.ResponseWriter, r *http.Request) {
-	log.Println(
-		"===================================================================================================== UPDATE GAME",
-	)
-
 	// parsing
 	uuid, err := uuid.Parse(r.PathValue("uuid"))
 	if err != nil {
@@ -79,24 +62,13 @@ func (h *GameHandler) UpdateGame(w http.ResponseWriter, r *http.Request) {
 	// business logic ----
 	err = h.s.GameChangeValidate(gs, &(gs.UUID))
 	if err != nil {
-		log.Println("ERROR: ", err)
+		// log.Println("ERROR: ", err)
 		http.Error(w, "Game not changed", http.StatusBadRequest)
 		return
 	}
 
 	// game status check -----
-	h.s.IsGameEnd(gs)
-	if gs.CompStatus == domain.Motive {
-		h.s.MakeNextMove(gs)
-	}
-
-	fmt.Println("------------ EXPORT")
-	fmt.Println("Status = ", gs.CompStatus)
-	fmt.Println("Field")
-	fmt.Println(gs.Base.Field[0])
-	fmt.Println(gs.Base.Field[1])
-	fmt.Println(gs.Base.Field[2])
-	fmt.Println("------------------\n")
+	h.s.MakeNextMove(gs)
 
 	h.s.UpdateGameSession(gs)
 
@@ -104,7 +76,4 @@ func (h *GameHandler) UpdateGame(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(dto)
-	log.Println(
-		"===================================================================================================== END UPDATE GAME\n\n\n\n",
-	)
 }

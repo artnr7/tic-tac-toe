@@ -4,7 +4,6 @@ import (
 	"domain"
 	"errors"
 	"fmt"
-	"log"
 	"math/rand"
 
 	"github.com/google/uuid"
@@ -17,13 +16,6 @@ func inc(winRow *uint8, el, side uint8) {
 }
 
 func winOrDraw(base *domain.Base, side uint8) int {
-	// fmt.Println("------------ WINORDRAW")
-	// fmt.Println("Field")
-	// fmt.Println(base.Field[0])
-	// fmt.Println(base.Field[1])
-	// fmt.Println(base.Field[2])
-	// defer fmt.Print("------------------\n\n")
-
 	var hWinRow, vWinRow, d1WinRow, d2WinRow, cnt uint8
 
 	for i := range base.Field {
@@ -33,23 +25,6 @@ func winOrDraw(base *domain.Base, side uint8) int {
 			if !isItEmptyBlock(base.Field[i][j]) {
 				cnt++
 			}
-			// fmt.Println(
-			// 	"base = ",
-			// 	base,
-			// 	"\nhWinRow = ",
-			// 	hWinRow,
-			// 	"\nvWinRow = ",
-			// 	vWinRow,
-			// 	"\nd1WinRow = ",
-			// 	d1WinRow,
-			// 	"\nd2WinRow = ",
-			// 	d2WinRow,
-			// 	"\ni = ", i,
-			// 	"\nj = ", j,
-			// 	"\nbase.Field[i][j] = ", base.Field[i][j],
-			// 	"\nbase.Field[j][i] = ", base.Field[j][i],
-			// 	"\nside = ", side,
-			// )
 			inc(&hWinRow, base.Field[i][j], side)
 			inc(&vWinRow, base.Field[j][i], side)
 			if i == j {
@@ -81,17 +56,7 @@ func isItCompSide(compSide, curSide uint8) bool {
 	return compSide == curSide
 }
 
-func minimax(gs *domain.GameSession) domain.Vec {
-	// log.Println("================== MINIMAX")
-
-	_, bestMove := minimaxStep(gs.Base, gs.CompSide, gs.CompSide, -1)
-
-	fmt.Println("BEST MOVE = ", bestMove)
-
-	return bestMove
-}
-
-func minimaxStep(
+func minimax(
 	b domain.Base,
 	compSide, curSide uint8,
 	value int,
@@ -100,32 +65,19 @@ func minimaxStep(
 	var fst bool = true
 	var vec domain.Vec
 	value++
-	if value == 0 {
-		log.Println("================== MINIMAX")
-		fmt.Println("======== FST VEC = ", vec)
-	}
 
 	for i := range b.Field {
 		for j := range b.Field[i] {
 			if isItEmptyBlock(b.Field[i][j]) {
-				if value == 0 {
-					fmt.Println("======== CYCLE")
-				}
 				// ->
 				curB := b
 				curB.Field[i][j] = curSide
-
-				// fmt.Println("***********")
-				// fmt.Println(curB.Field[0])
-				// fmt.Println(curB.Field[1])
-				// fmt.Println(curB.Field[2])
-				// fmt.Print("\n\n")
 
 				status := winOrDraw(&curB, curSide)
 				switch status {
 				case domain.Vic:
 					if isItCompSide(compSide, curSide) {
-						heur = 10
+						heur = 10 - value
 					} else {
 						heur = -10
 					}
@@ -133,7 +85,7 @@ func minimaxStep(
 					heur = 0
 
 				case domain.Motive:
-					heur, _ = minimaxStep(curB, compSide, 3-curSide, value)
+					heur, _ = minimax(curB, compSide, 3-curSide, value)
 				}
 
 				if fst {
@@ -158,21 +110,13 @@ func minimaxStep(
 						minHeur = heur
 					}
 				}
-
-				if value == 0 {
-					fmt.Println("VEC = ", vec)
-					fmt.Println("HEUR = ", heur)
-				}
-
 				// ->
 			}
 		}
 	}
 	if isItCompSide(compSide, curSide) {
-		// fmt.Println("------ MAXHEUR = ", maxHeur)
 		return maxHeur, vec
 	} else {
-		// fmt.Println("------ MINHEUR = ", minHeur)
 		return minHeur, vec
 	}
 }
@@ -201,24 +145,21 @@ func makeFirstMoveInWholeGame(gs *domain.GameSession) bool {
 // MakeNextMove put computer prefer next move with more productivity
 // with minimax strategy used
 func (g *ServiceImpl) MakeNextMove(gs *domain.GameSession) {
-	log.Print("============================================ MAKE NEXT MOVE\n\n")
+	g.IsGameEnd(gs)
+	if gs.CompStatus != domain.Motive {
+		return
+	}
 
 	if makeFirstMoveInWholeGame(gs) == true {
 		return
 	}
 
 	// minimax
-	bestMove := minimax(gs)
-
-	// fmt.Println("------------ BEST MOVE")
-	// fmt.Println("BEST MOVE = ", bestMove)
-	// fmt.Print("------------------\n\n")
+	_, bestMove := minimax(gs.Base, gs.CompSide, gs.CompSide, -1)
 
 	gs.Base.Field[bestMove.Y][bestMove.X] = gs.CompSide
 	gs.Base.BlocksCnt++
-	log.Print(
-		"\n============================================ END MAKE NEXT MOVE\n\n",
-	)
+	g.IsGameEnd(gs)
 }
 
 func isFilledBlock(block uint8) bool {
@@ -304,7 +245,6 @@ func (g *ServiceImpl) GameChangeValidate(
 }
 
 func (g *ServiceImpl) IsGameEnd(gs *domain.GameSession) error {
-	fmt.Println("is game end")
 	oldGS, err := g.repo.GetModel(&(gs.UUID))
 	if err != nil {
 		return err
@@ -319,6 +259,5 @@ func (g *ServiceImpl) IsGameEnd(gs *domain.GameSession) error {
 	} else {
 		gs.CompStatus = domain.Motive
 	}
-	fmt.Println("end is game end")
 	return nil
 }
