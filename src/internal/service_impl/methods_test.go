@@ -8,46 +8,46 @@ import (
 
 func TestWin(t *testing.T) {
 	testTable := []struct {
-		base    domain.Base
-		side    uint8
-		expBool bool
+		base      domain.Base
+		side      uint8
+		expStatus int
 	}{
 		{
 			base: domain.Base{
 				[3][3]uint8{{1, 2, 0}, {1, 2, 0}, {1, 0, 0}},
 				5,
 			},
-			side:    domain.X,
-			expBool: true,
+			side:      domain.X,
+			expStatus: domain.Vic,
 		},
 		{
 			base: domain.Base{
 				[3][3]uint8{{1, 1, 1}, {1, 2, 0}, {1, 0, 0}},
 				6,
 			},
-			side:    domain.X,
-			expBool: true,
+			side:      domain.X,
+			expStatus: domain.Vic,
 		},
 		{
 			base: domain.Base{
 				[3][3]uint8{{0, 1, 1}, {1, 2, 0}, {1, 0, 0}},
 				6,
 			},
-			side:    domain.X,
-			expBool: false,
+			side:      domain.X,
+			expStatus: domain.Motive,
 		},
 		{
 			base: domain.Base{
 				[3][3]uint8{{1, 2, 0}, {2, 1, 0}, {2, 0, 1}},
 				6,
 			},
-			side:    domain.X,
-			expBool: true,
+			side:      domain.X,
+			expStatus: domain.Vic,
 		},
 	}
 
 	for _, tcs := range testTable {
-		if winOrDraw(&tcs.base, tcs.side) == tcs.expBool {
+		if winOrDraw(&tcs.base, tcs.side) == tcs.expStatus {
 			fmt.Println("Correct")
 		} else {
 			t.Error("Incorrect")

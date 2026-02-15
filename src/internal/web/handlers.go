@@ -21,7 +21,7 @@ func NewGameHandler(s service.Service) *GameHandler {
 
 func (h *GameHandler) CreateGame(w http.ResponseWriter, r *http.Request) {
 	log.Println("create game")
-	defer log.Println("end create game\n\n")
+	defer log.Println("------------------end create game\n\n")
 
 	gs, err := h.s.CreateGameSession()
 	if err != nil {
@@ -42,7 +42,13 @@ func (h *GameHandler) CreateGame(w http.ResponseWriter, r *http.Request) {
 		)
 	}
 
-	fmt.Println(gs.Base.Field)
+	fmt.Println("------------ CREATE")
+	fmt.Println("Status = ", gs.CompStatus)
+	fmt.Println("Field")
+	fmt.Println(gs.Base.Field[0])
+	fmt.Println(gs.Base.Field[1])
+	fmt.Println(gs.Base.Field[2])
+	fmt.Print("------------------\n\n")
 
 	dto := toDTO(gs)
 	w.Header().Set("Content-Type", "application/json")
@@ -79,13 +85,16 @@ func (h *GameHandler) UpdateGame(w http.ResponseWriter, r *http.Request) {
 	// game status check -----
 	h.s.IsGameEnd(gs)
 	if gs.CompStatus == domain.Motive {
-		fmt.Println("-1-1-1--1-1-1-")
 		h.s.MakeNextMove(gs)
 	}
 
-	fmt.Printf("--------\n")
-	fmt.Printf("Status = %v\nField = %v", gs.CompStatus, gs.Base.Field)
-	fmt.Printf("\n--------\n")
+	fmt.Println("------------ EXPORT")
+	fmt.Println("Status = ", gs.CompStatus)
+	fmt.Println("Field")
+	fmt.Println(gs.Base.Field[0])
+	fmt.Println(gs.Base.Field[1])
+	fmt.Println(gs.Base.Field[2])
+	fmt.Println("------------------\n")
 
 	h.s.UpdateGameSession(gs)
 
@@ -94,6 +103,6 @@ func (h *GameHandler) UpdateGame(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(dto)
 	log.Println(
-		"end update game================================================================================================\n\n",
+		"========================================== END UPDATE GAME\n\n\n\n",
 	)
 }

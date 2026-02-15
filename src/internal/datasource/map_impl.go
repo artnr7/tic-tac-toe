@@ -24,7 +24,7 @@ func (m *Map) CreateModel(gs *domain.GameSession) error {
 	mod := toModel(gs)
 	m.Store(&mod.uuid, mod)
 
-	log.Println("end create model in map")
+	log.Println("end create model in map\n")
 	return nil
 }
 
