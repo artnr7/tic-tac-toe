@@ -82,115 +82,99 @@ func isItCompSide(compSide, curSide uint8) bool {
 }
 
 func minimax(gs *domain.GameSession) domain.Vec {
-	var v domain.Vec
-	var maxHeur int
-	var fst bool = true
+	// log.Println("================== MINIMAX")
 
-	for i := range gs.Base.Field {
-		for j := range gs.Base.Field[i] {
-			if isItEmptyBlock(gs.Base.Field[i][j]) {
-				// ->
-				// curB := gs.Base
-				// curB.Field[i][j] = gs.CompSide
-				heur := minimaxStep(gs.Base, gs.CompSide, gs.CompSide, -1)
-				if fst {
-					maxHeur = heur
-					v = domain.Vec{int8(i), int8(j)}
-					fst = false
-				}
+	_, bestMove := minimaxStep(gs.Base, gs.CompSide, gs.CompSide, -1)
 
-				if heur > maxHeur {
-					maxHeur = heur
-					v = domain.Vec{int8(i), int8(j)}
-				}
-				// fmt.Println("***********")
-				// fmt.Println("HEUR = ", heur)
-				// fmt.Println("MAXHEUR = ", maxHeur)
-				// fmt.Println("v = ", v)
-				// fmt.Println("***********\n")
+	fmt.Println("BEST MOVE = ", bestMove)
 
-				// ->
-			}
-		}
-	}
-	fmt.Println("***********")
-	fmt.Println("MAXHEUR = ", maxHeur)
-	fmt.Println("v = ", v)
-	fmt.Print("***********\n\n")
-	return v
+	return bestMove
 }
 
-func minimaxStep(b domain.Base, compSide, curSide uint8, value int) int {
-	// fmt.Println("minimax")
+func minimaxStep(
+	b domain.Base,
+	compSide, curSide uint8,
+	value int,
+) (int, domain.Vec) {
 	var heur, maxHeur, minHeur int
-	var fst bool
+	var fst bool = true
+	var vec domain.Vec
 	value++
+	if value == 0 {
+		log.Println("================== MINIMAX")
+		fmt.Println("======== FST VEC = ", vec)
+	}
 
 	for i := range b.Field {
 		for j := range b.Field[i] {
 			if isItEmptyBlock(b.Field[i][j]) {
+				if value == 0 {
+					fmt.Println("======== CYCLE")
+				}
 				// ->
 				curB := b
 				curB.Field[i][j] = curSide
 
+				// fmt.Println("***********")
+				// fmt.Println(curB.Field[0])
+				// fmt.Println(curB.Field[1])
+				// fmt.Println(curB.Field[2])
+				// fmt.Print("\n\n")
+
 				status := winOrDraw(&curB, curSide)
-				// fmt.Println("STATUS = ", status)
 				switch status {
 				case domain.Vic:
 					if isItCompSide(compSide, curSide) {
+						heur = 10
 					} else {
 						heur = -10
 					}
 				case domain.Draw:
+					heur = 0
 
-
+				case domain.Motive:
+					heur, _ = minimaxStep(curB, compSide, 3-curSide, value)
 				}
 
 				if fst {
+					if isItCompSide(compSide, curSide) {
+						vec = domain.Vec{Y: int8(i), X: int8(j)}
+						maxHeur = heur
+					} else {
+						vec = domain.Vec{Y: int8(i), X: int8(j)}
+						minHeur = heur
+					}
 					fst = false
 				}
 
-				// heur = minimaxStep(curB, compSide, 3-curSide, value)
+				if isItCompSide(compSide, curSide) {
+					if heur > maxHeur {
+						vec = domain.Vec{Y: int8(i), X: int8(j)}
+						maxHeur = heur
+					}
+				} else {
+					if heur < minHeur {
+						vec = domain.Vec{Y: int8(i), X: int8(j)}
+						minHeur = heur
+					}
+				}
 
-				// if value >= 0 && value < 2 {
-				// 	fmt.Println("***********")
-				// 	switch value {
-				// 	case 0:
-				// 		fmt.Println("*********************** HEUR 0 = ", heur)
-				// 	case 1:
-				// 		fmt.Println("HEUR 1 = ", heur)
-				// 	}
-				// 	fmt.Print("***********\n\n")
-				// }
-
-				// if fst {
-				// 	if isItCompSide(compSide, curSide) {
-				// 		maxHeur = heur
-				// 	} else {
-				// 		minHeur = heur
-				// 	}
-				// 	fst = false
-				// }
-				//
-				// if isItCompSide(compSide, curSide) {
-				// 	if heur > maxHeur {
-				// 		maxHeur = heur
-				// 	}
-				// } else {
-				// 	if heur < minHeur {
-				// 		minHeur = heur
-				// 	}
-				// }
+				if value == 0 {
+					fmt.Println("VEC = ", vec)
+					fmt.Println("HEUR = ", heur)
+				}
 
 				// ->
 			}
 		}
 	}
-	// if isItCompSide(compSide, curSide) {
-	// 	return maxHeur
-	// } else {
-	// 	return minHeur
-	// }
+	if isItCompSide(compSide, curSide) {
+		// fmt.Println("------ MAXHEUR = ", maxHeur)
+		return maxHeur, vec
+	} else {
+		// fmt.Println("------ MINHEUR = ", minHeur)
+		return minHeur, vec
+	}
 }
 
 func makeFirstMoveInWholeGame(gs *domain.GameSession) bool {
@@ -226,13 +210,15 @@ func (g *ServiceImpl) MakeNextMove(gs *domain.GameSession) {
 	// minimax
 	bestMove := minimax(gs)
 
-	fmt.Println("------------ BEST MOVE")
-	fmt.Println("BEST MOVE = ", bestMove)
-	fmt.Print("------------------\n\n")
+	// fmt.Println("------------ BEST MOVE")
+	// fmt.Println("BEST MOVE = ", bestMove)
+	// fmt.Print("------------------\n\n")
 
 	gs.Base.Field[bestMove.Y][bestMove.X] = gs.CompSide
 	gs.Base.BlocksCnt++
-	log.Print("-------------------- END MAKE NEXT MOVE\n\n")
+	log.Print(
+		"\n============================================ END MAKE NEXT MOVE\n\n",
+	)
 }
 
 func isFilledBlock(block uint8) bool {

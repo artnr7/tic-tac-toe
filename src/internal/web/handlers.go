@@ -56,7 +56,9 @@ func (h *GameHandler) CreateGame(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *GameHandler) UpdateGame(w http.ResponseWriter, r *http.Request) {
-	log.Println("update game")
+	log.Println(
+		"===================================================================================================== UPDATE GAME",
+	)
 
 	// parsing
 	uuid, err := uuid.Parse(r.PathValue("uuid"))
@@ -103,6 +105,6 @@ func (h *GameHandler) UpdateGame(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(dto)
 	log.Println(
-		"========================================== END UPDATE GAME\n\n\n\n",
+		"===================================================================================================== END UPDATE GAME\n\n\n\n",
 	)
 }
